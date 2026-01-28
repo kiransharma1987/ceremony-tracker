@@ -78,17 +78,22 @@ export class ExpenseService {
   // Load from API
   async loadFromApi(): Promise<void> {
     const token = this.authService.getToken();
+    console.log('loadFromApi called, token:', token ? token.substring(0, 20) + '...' : 'null');
+    
     if (!token || token === 'demo') {
+      console.log('Using localStorage mode (no token or demo mode)');
       return; // Use localStorage in demo mode
     }
 
     try {
+      console.log('Fetching expenses from API...');
       const data = await firstValueFrom(
         this.http.get<any[]>(`${environment.apiUrl}/expenses`, {
           headers: this.authService.getAuthHeaders()
         })
       );
       
+      console.log('API returned', data.length, 'expenses');
       const expenses = data.map(exp => ({
         ...exp,
         date: new Date(exp.date),
@@ -131,16 +136,19 @@ export class ExpenseService {
 
   async addExpense(data: ExpenseFormData): Promise<Expense> {
     const token = this.authService.getToken();
+    console.log('addExpense called, token:', token ? token.substring(0, 20) + '...' : 'null');
     
     if (token && token !== 'demo') {
       // Use API
       try {
+        console.log('Adding expense via API...');
         const expense = await firstValueFrom(
           this.http.post<any>(`${environment.apiUrl}/expenses`, data, {
             headers: this.authService.getAuthHeaders()
           })
         );
         
+        console.log('Expense added via API:', expense.id);
         const parsed = {
           ...expense,
           date: new Date(expense.date),
@@ -157,6 +165,7 @@ export class ExpenseService {
     }
     
     // Fallback to localStorage
+    console.log('Adding expense to localStorage (demo mode)');
     const now = new Date();
     const expense: Expense = {
       id: this.generateId(),

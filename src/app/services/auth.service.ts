@@ -110,11 +110,19 @@ export class AuthService {
   // Admin login - tries API first, falls back to demo mode
   async loginAsAdmin(password: string): Promise<boolean> {
     // Try API login first
-    const success = await this.login('admin@ceremony.app', password);
-    if (success) return true;
+    try {
+      const success = await this.login('admin@ceremony.app', password);
+      if (success) {
+        console.log('API login successful, token:', this.token()?.substring(0, 20) + '...');
+        return true;
+      }
+    } catch (error) {
+      console.error('API login failed:', error);
+    }
 
-    // Fallback to demo mode for offline/development
+    // Fallback to demo mode for offline/development ONLY if password matches
     if (password === 'admin123') {
+      console.log('Falling back to demo mode');
       const user: User = {
         id: 'KHK',
         role: 'admin',
