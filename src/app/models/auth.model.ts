@@ -1,6 +1,6 @@
 // User and Authentication Models
 
-export type UserRole = 'super_admin' | 'admin' | 'participant' | 'brother' | 'contributor';
+export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'PARTICIPANT' | 'BROTHER' | 'CONTRIBUTOR';
 
 export interface User {
   id: string;
@@ -11,8 +11,8 @@ export interface User {
   productId?: string;
   brotherId?: string; // legacy
   isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
   accessToken?: string;
 }
 

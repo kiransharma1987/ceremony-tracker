@@ -161,17 +161,6 @@ export interface CategorySummary {
   percentage: number;
 }
 
-// User Roles
-export type UserRole = 'admin' | 'brother' | 'contributor';
-
-export interface User {
-  id: string;
-  role: UserRole;
-  brotherId?: BrotherId;
-  contributorName?: string;
-  accessToken?: string;
-}
-
 // Event Status
 export interface EventStatus {
   isClosed: boolean;
