@@ -66,12 +66,14 @@ import { AuthService } from '../../../services';
       font-weight: 600;
       margin: 0;
       letter-spacing: 0.5px;
+      color: white;
     }
     
     .subtitle {
       font-size: 0.75rem;
-      opacity: 0.8;
+      opacity: 0.9;
       margin-top: 2px;
+      color: rgba(255, 255, 255, 0.9);
     }
     
     .nav-section {
