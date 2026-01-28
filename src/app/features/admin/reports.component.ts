@@ -120,10 +120,10 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
       <section class="links-section">
         <h3 class="section-title">Share Access Links</h3>
         <div class="links-grid">
-          <div class="link-card" *ngFor="let brother of ['HNK', 'HNP', 'HNS', 'HNM']">
+          <div class="link-card">
             <span class="link-icon">👤</span>
-            <span class="link-name">{{ brother }}</span>
-            <button class="btn btn-small" (click)="copyBrotherLink(brother)">
+            <span class="link-name">Brothers Portal</span>
+            <button class="btn btn-small" (click)="copyBrotherLink()">
               Copy Link
             </button>
           </div>
@@ -136,7 +136,7 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
           </div>
         </div>
         <p class="link-note">
-          Share these links with respective brothers and contributors for read-only access.
+          Share the Brothers Portal link with family. Password: <strong>padmamma2026</strong>
         </p>
       </section>
 
@@ -462,14 +462,15 @@ export class ReportsComponent {
     this.showReopenDialog = false;
   }
 
-  copyBrotherLink(brotherId: string): void {
-    const link = `${window.location.origin}/brother/${brotherId}?token=demo`;
-    navigator.clipboard.writeText(link);
-    alert(`Link copied for ${brotherId}!`);
+  copyBrotherLink(): void {
+    const link = `${window.location.origin}/login`;
+    const message = `Padmamma's First Year Ceremony Tracker\n\nLink: ${link}\n\nSelect your name and use password: padmamma2026`;
+    navigator.clipboard.writeText(message);
+    alert('Brother access info copied!');
   }
 
   copyContributorLink(): void {
-    const link = `${window.location.origin}/contribute?token=demo`;
+    const link = `${window.location.origin}/login`;
     navigator.clipboard.writeText(link);
     alert('Contributor link copied!');
   }
