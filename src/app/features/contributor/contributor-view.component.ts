@@ -421,9 +421,9 @@ export class ContributorViewComponent {
     private authService: AuthService
   ) {
     const user = this.authService.user();
-    if (user?.contributorName) {
-      this.formData.contributorName = user.contributorName;
-      this.currentContributorName = user.contributorName;
+    if (user?.name) {
+      this.formData.contributorName = user.name;
+      this.currentContributorName = user.name;
     }
   }
 

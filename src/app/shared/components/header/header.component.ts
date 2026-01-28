@@ -243,12 +243,12 @@ export class HeaderComponent {
     if (!user) return '';
     
     switch (user.role) {
-      case 'admin':
+      case 'ADMIN':
         return '👑 Admin (KHK)';
-      case 'brother':
+      case 'BROTHER':
         return `👤 ${user.brotherId}`;
-      case 'contributor':
-        return `🤝 ${user.contributorName}`;
+      case 'CONTRIBUTOR':
+        return `🤝 ${user.name}`;
       default:
         return '';
     }

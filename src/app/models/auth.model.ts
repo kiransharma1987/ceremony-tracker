@@ -71,33 +71,33 @@ export interface UpdateUserRequest {
 
 export function getRoleDisplayName(role: UserRole): string {
   const displayNames: Record<UserRole, string> = {
-    super_admin: 'Super Administrator',
-    admin: 'Event Administrator',
-    participant: 'Participant',
-    brother: 'Brother',
-    contributor: 'Contributor'
+    SUPER_ADMIN: 'Super Administrator',
+    ADMIN: 'Event Administrator',
+    PARTICIPANT: 'Participant',
+    BROTHER: 'Brother',
+    CONTRIBUTOR: 'Contributor'
   };
   return displayNames[role];
 }
 
 export function getRoleIcon(role: UserRole): string {
   const icons: Record<UserRole, string> = {
-    super_admin: '👑',
-    admin: '🔧',
-    participant: '👤',
-    brother: '👥',
-    contributor: '🤝'
+    SUPER_ADMIN: '👑',
+    ADMIN: '🔧',
+    PARTICIPANT: '👤',
+    BROTHER: '👥',
+    CONTRIBUTOR: '🤝'
   };
   return icons[role];
 }
 
 export function getRoleColor(role: UserRole): string {
   const colors: Record<UserRole, string> = {
-    super_admin: '#f44336', // red
-    admin: '#667eea',        // purple
-    participant: '#4caf50',   // green
-    brother: '#2196f3',       // blue
-    contributor: '#ff9800'    // orange
+    SUPER_ADMIN: '#f44336', // red
+    ADMIN: '#667eea',        // purple
+    PARTICIPANT: '#4caf50',   // green
+    BROTHER: '#2196f3',       // blue
+    CONTRIBUTOR: '#ff9800'    // orange
   };
   return colors[role];
 }

@@ -1,4 +1,6 @@
 // Expense Categories - Fixed as per BRD
+import { User } from './auth.model';
+
 export type ExpenseCategory =
   | 'Food & Catering'
   | 'Priest Renumeration'
