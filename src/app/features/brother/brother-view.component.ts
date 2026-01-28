@@ -496,9 +496,17 @@ export class BrotherViewComponent implements OnInit {
     const authBrotherId = this.authService.getCurrentBrotherId();
     this.currentBrotherId = routeBrotherId || authBrotherId || 'HNK';
     
+    // Debug token
+    const token = this.authService.getToken();
+    console.log('BrotherView ngOnInit - token:', token ? token.substring(0, 30) + '...' : 'null');
+    
     // Load data from API
-    this.expenseService.loadFromApi();
-    this.contributionService.loadFromApi();
+    this.expenseService.loadFromApi().then(() => {
+      console.log('BrotherView - Expenses loaded, total:', this.expenseService.totalExpenses());
+    });
+    this.contributionService.loadFromApi().then(() => {
+      console.log('BrotherView - Contributions loaded, total:', this.contributionService.totalContributions());
+    });
     this.settlementService.loadFromApi();
   }
 
