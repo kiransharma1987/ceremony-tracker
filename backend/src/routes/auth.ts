@@ -217,7 +217,16 @@ router.post('/users', authenticateToken, async (req: AuthRequest, res: Response)
 // ===== GET ALL USERS (Super Admin Only) =====
 router.get('/users', async (req: AuthRequest, res: Response) => {
   try {
-    const users = await prisma.user.findMany();
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isActive: true,
+        createdAt: true
+      }
+    });
     return res.json({ users });
   } catch (error) {
     console.error('GET /users error:', error);
