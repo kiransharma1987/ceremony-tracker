@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { ExpenseService, SettlementService, AuthService } from '../../services';
+import { ExpenseService, SettlementService, AuthService, ContributionService } from '../../services';
 import { BrotherId, BROTHERS, EXPENSE_CATEGORIES } from '../../models';
 import { SummaryCardComponent } from '../../shared/components/summary-card/summary-card.component';
 import { PieChartComponent, ChartDataItem } from '../../shared/components/charts/pie-chart.component';
@@ -122,7 +122,7 @@ import { PieChartComponent, ChartDataItem } from '../../shared/components/charts
           <div class="chart-container">
             <app-pie-chart
               title=""
-              [data]="categoryChartData">
+              [data]="categoryChartData()">
             </app-pie-chart>
           </div>
           <div class="category-list">
@@ -486,6 +486,7 @@ export class BrotherViewComponent implements OnInit {
     private route: ActivatedRoute,
     private expenseService: ExpenseService,
     private settlementService: SettlementService,
+    private contributionService: ContributionService,
     private authService: AuthService
   ) {}
 
@@ -494,6 +495,11 @@ export class BrotherViewComponent implements OnInit {
     const routeBrotherId = this.route.snapshot.paramMap.get('brotherId') as BrotherId;
     const authBrotherId = this.authService.getCurrentBrotherId();
     this.currentBrotherId = routeBrotherId || authBrotherId || 'HNK';
+    
+    // Load data from API
+    this.expenseService.loadFromApi();
+    this.contributionService.loadFromApi();
+    this.settlementService.loadFromApi();
   }
 
   summary = this.settlementService.financialSummary;
@@ -577,7 +583,7 @@ export class BrotherViewComponent implements OnInit {
       .slice(0, 10);
   }
 
-  get categoryChartData(): ChartDataItem[] {
+  categoryChartData = computed<ChartDataItem[]>(() => {
     const colors = [
       '#3498db', '#e74c3c', '#2ecc71', '#f39c12',
       '#9b59b6', '#1abc9c', '#e67e22', '#34495e'
@@ -588,5 +594,5 @@ export class BrotherViewComponent implements OnInit {
       value: cat.totalAmount,
       color: colors[i % colors.length]
     }));
-  }
+  });
 }

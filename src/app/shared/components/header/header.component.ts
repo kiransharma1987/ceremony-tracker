@@ -12,7 +12,7 @@ import { AuthService } from '../../../services';
       <div class="header-content">
         <div class="logo-section">
           <h1 class="app-title">🪔 Ceremony Expense Tracker</h1>
-          <span class="subtitle">Grandmother's First Death Ceremony</span>
+          <span class="subtitle">Padmamma's First Year Ceremony</span>
         </div>
         
         <nav class="nav-section" *ngIf="authService.isAuthenticated()">

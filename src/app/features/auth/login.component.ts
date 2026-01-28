@@ -14,7 +14,7 @@ import { AuthService } from '../../services';
         <div class="login-header">
           <span class="logo">🪔</span>
           <h1>Ceremony Expense Tracker</h1>
-          <p>Grandmother's First Death Ceremony</p>
+          <p>Padmamma's First Year Ceremony</p>
         </div>
 
         <!-- Login Options -->
