@@ -4,8 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build --configuration production",
-    "vercel-build": "npx ng build --configuration production",
+    "build": "npx --yes @angular/cli@17 build --configuration production",
+    "vercel-build": "npx --yes @angular/cli@17 build --configuration production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
