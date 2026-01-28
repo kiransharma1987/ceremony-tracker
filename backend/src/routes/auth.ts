@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import prisma from '../config/database';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
 
-const router = Router();
+const router: Router = Router();
 
 // Login
 router.post('/login', async (req, res: Response) => {

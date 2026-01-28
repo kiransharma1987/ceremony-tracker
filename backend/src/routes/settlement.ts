@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
 
-const router = Router();
+const router: Router = Router();
 
 interface BrotherSettlement {
   id: string;

@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest, authenticateToken, requireAdmin } from '../middleware/auth';
 
-const router = Router();
+const router: Router = Router();
 
 // Get all expenses
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
