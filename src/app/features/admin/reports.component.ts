@@ -123,15 +123,15 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
           <div class="link-card">
             <span class="link-icon">👤</span>
             <span class="link-name">Brothers Portal</span>
-            <button class="btn btn-small" (click)="copyBrotherLink()">
-              Copy Link
+            <button class="btn btn-small" [class.copied]="brotherLinkCopied" (click)="copyBrotherLink()">
+              {{ brotherLinkCopied ? '✓ Copied!' : 'Copy Link' }}
             </button>
           </div>
           <div class="link-card contributor">
             <span class="link-icon">🤝</span>
             <span class="link-name">Contributor Portal</span>
-            <button class="btn btn-small" (click)="copyContributorLink()">
-              Copy Link
+            <button class="btn btn-small" [class.copied]="contributorLinkCopied" (click)="copyContributorLink()">
+              {{ contributorLinkCopied ? '✓ Copied!' : 'Copy Link' }}
             </button>
           </div>
         </div>
@@ -281,10 +281,17 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
       font-size: 0.8rem;
       background: #ecf0f1;
       color: #5d6d7e;
+      min-width: 85px;
+      transition: all 0.2s ease;
     }
     
     .btn-small:hover {
       background: #dfe6e9;
+    }
+    
+    .btn-small.copied {
+      background: #27ae60;
+      color: white;
     }
     
     .closure-card {
@@ -416,6 +423,8 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
 export class ReportsComponent {
   showCloseDialog = false;
   showReopenDialog = false;
+  brotherLinkCopied = false;
+  contributorLinkCopied = false;
 
   constructor(
     private exportService: ExportService,
@@ -465,12 +474,14 @@ export class ReportsComponent {
   copyBrotherLink(): void {
     const link = `${window.location.origin}/login`;
     navigator.clipboard.writeText(link);
-    alert('Link copied! Share with brothers along with password: padmamma2026');
+    this.brotherLinkCopied = true;
+    setTimeout(() => this.brotherLinkCopied = false, 2000);
   }
 
   copyContributorLink(): void {
     const link = `${window.location.origin}/login`;
     navigator.clipboard.writeText(link);
-    alert('Contributor link copied!');
+    this.contributorLinkCopied = true;
+    setTimeout(() => this.contributorLinkCopied = false, 2000);
   }
 }
