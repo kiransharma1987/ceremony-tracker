@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DepositService, SettlementService } from '../../services';
@@ -571,7 +571,7 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
     }
   `]
 })
-export class DepositManagementComponent {
+export class DepositManagementComponent implements OnInit {
   readonly brothers = BROTHERS;
   
   showForm = signal(false);
@@ -589,6 +589,10 @@ export class DepositManagementComponent {
     public depositService: DepositService,
     public settlementService: SettlementService
   ) {}
+
+  ngOnInit(): void {
+    this.depositService.loadDeposits();
+  }
 
   openAddForm(): void {
     this.editingDeposit.set(null);

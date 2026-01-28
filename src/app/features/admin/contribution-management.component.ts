@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ContributionService, SettlementService } from '../../services';
@@ -503,7 +503,7 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
     }
   `]
 })
-export class ContributionManagementComponent {
+export class ContributionManagementComponent implements OnInit {
   showForm = signal(false);
   editingContribution = signal<Contribution | null>(null);
   showDeleteDialog = signal(false);
@@ -521,6 +521,10 @@ export class ContributionManagementComponent {
     public contributionService: ContributionService,
     public settlementService: SettlementService
   ) {}
+
+  ngOnInit(): void {
+    this.contributionService.loadFromApi();
+  }
 
   openAddForm(): void {
     this.editingContribution.set(null);

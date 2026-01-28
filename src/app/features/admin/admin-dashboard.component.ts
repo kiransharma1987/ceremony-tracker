@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ExpenseService, ContributionService, SettlementService, BudgetService } from '../../services';
 import { SummaryCardComponent } from '../../shared/components/summary-card/summary-card.component';
@@ -404,13 +404,21 @@ import { EXPENSE_CATEGORIES } from '../../models';
     }
   `]
 })
-export class AdminDashboardComponent {
+export class AdminDashboardComponent implements OnInit {
   constructor(
     private expenseService: ExpenseService,
     private contributionService: ContributionService,
     public settlementService: SettlementService,
     private budgetService: BudgetService
   ) {}
+
+  ngOnInit(): void {
+    // Load data from API
+    this.expenseService.loadFromApi();
+    this.contributionService.loadFromApi();
+    this.budgetService.loadFromApi();
+    this.settlementService.loadFromApi();
+  }
 
   summary = this.settlementService.financialSummary;
   categorySummary = this.expenseService.categorySummary;

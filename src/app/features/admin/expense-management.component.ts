@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ExpenseService, SettlementService } from '../../services';
@@ -543,7 +543,7 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
     }
   `]
 })
-export class ExpenseManagementComponent {
+export class ExpenseManagementComponent implements OnInit {
   categories = EXPENSE_CATEGORIES;
   brothers = BROTHERS;
   
@@ -568,6 +568,10 @@ export class ExpenseManagementComponent {
     private expenseService: ExpenseService,
     public settlementService: SettlementService
   ) {}
+
+  ngOnInit(): void {
+    this.expenseService.loadFromApi();
+  }
 
   openAddForm(): void {
     this.editingExpense.set(null);
