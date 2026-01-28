@@ -1,12 +1,15 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Deposit, DepositFormData, DepositSummary, BrotherId } from '../models';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DepositService {
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
   private apiUrl = `${environment.apiUrl}/deposits`;
   
   // State
@@ -42,31 +45,31 @@ export class DepositService {
       .reduce((sum, d) => sum + d.amount, 0)
   );
 
-  constructor(private http: HttpClient) {
+  constructor() {
     this.loadDeposits();
-  }
-
-  private getAuthHeaders(): { [key: string]: string } {
-    const token = localStorage.getItem('token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
   loadDeposits(): void {
     this.loading.set(true);
     this.error.set(null);
 
-    const token = localStorage.getItem('token');
-    if (!token) {
+    const token = this.authService.getToken();
+    console.log('Deposit loadDeposits, token:', token ? token.substring(0, 20) + '...' : 'null');
+    
+    if (!token || token === 'demo') {
       // Demo mode - load from localStorage
+      console.log('Deposits: Using localStorage mode');
       const stored = localStorage.getItem('deposits');
       this.deposits.set(stored ? JSON.parse(stored) : []);
       this.loading.set(false);
       return;
     }
 
-    this.http.get<Deposit[]>(this.apiUrl, { headers: this.getAuthHeaders() })
+    console.log('Deposits: Fetching from API...');
+    this.http.get<Deposit[]>(this.apiUrl, { headers: this.authService.getAuthHeaders() })
       .subscribe({
         next: (deposits) => {
+          console.log('Deposits: API returned', deposits.length, 'deposits');
           this.deposits.set(deposits.map(d => ({
             ...d,
             date: new Date(d.date),
@@ -86,9 +89,12 @@ export class DepositService {
   }
 
   addDeposit(data: DepositFormData): void {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    const token = this.authService.getToken();
+    console.log('Deposit addDeposit, token:', token ? token.substring(0, 20) + '...' : 'null');
+    
+    if (!token || token === 'demo') {
       // Demo mode
+      console.log('Deposits: Adding to localStorage (demo mode)');
       const newDeposit: Deposit = {
         id: crypto.randomUUID(),
         ...data,
@@ -100,9 +106,11 @@ export class DepositService {
       return;
     }
 
-    this.http.post<Deposit>(this.apiUrl, data, { headers: this.getAuthHeaders() })
+    console.log('Deposits: Adding via API...');
+    this.http.post<Deposit>(this.apiUrl, data, { headers: this.authService.getAuthHeaders() })
       .subscribe({
         next: (deposit) => {
+          console.log('Deposits: Added via API:', deposit.id);
           this.deposits.update(deps => [...deps, {
             ...deposit,
             date: new Date(deposit.date),
@@ -118,8 +126,8 @@ export class DepositService {
   }
 
   updateDeposit(id: string, data: Partial<DepositFormData>): void {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    const token = this.authService.getToken();
+    if (!token || token === 'demo') {
       // Demo mode
       this.deposits.update(deps => 
         deps.map(d => d.id === id ? { ...d, ...data, updatedAt: new Date() } : d)
@@ -128,7 +136,7 @@ export class DepositService {
       return;
     }
 
-    this.http.put<Deposit>(`${this.apiUrl}/${id}`, data, { headers: this.getAuthHeaders() })
+    this.http.put<Deposit>(`${this.apiUrl}/${id}`, data, { headers: this.authService.getAuthHeaders() })
       .subscribe({
         next: (deposit) => {
           this.deposits.update(deps => 
@@ -148,15 +156,15 @@ export class DepositService {
   }
 
   deleteDeposit(id: string): void {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    const token = this.authService.getToken();
+    if (!token || token === 'demo') {
       // Demo mode
       this.deposits.update(deps => deps.filter(d => d.id !== id));
       this.saveToLocalStorage();
       return;
     }
 
-    this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getAuthHeaders() })
+    this.http.delete(`${this.apiUrl}/${id}`, { headers: this.authService.getAuthHeaders() })
       .subscribe({
         next: () => {
           this.deposits.update(deps => deps.filter(d => d.id !== id));
