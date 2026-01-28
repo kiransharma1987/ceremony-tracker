@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ExpenseService, ContributionService, SettlementService, BudgetService } from '../../services';
 import { SummaryCardComponent } from '../../shared/components/summary-card/summary-card.component';
@@ -112,12 +112,12 @@ import { EXPENSE_CATEGORIES } from '../../models';
         <div class="charts-grid">
           <app-pie-chart
             title="Expenses by Category"
-            [data]="categoryChartData">
+            [data]="categoryChartData()">
           </app-pie-chart>
           
           <app-bar-chart
             title="Budget vs Actual"
-            [data]="budgetChartData">
+            [data]="budgetChartData()">
           </app-bar-chart>
         </div>
       </section>
@@ -167,6 +167,7 @@ import { EXPENSE_CATEGORIES } from '../../models';
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 1rem;
+      align-items: stretch;
     }
     
     .surplus-notice {
@@ -423,21 +424,23 @@ export class AdminDashboardComponent implements OnInit {
   summary = this.settlementService.financialSummary;
   categorySummary = this.expenseService.categorySummary;
 
-  get categoryChartData(): ChartDataItem[] {
+  categoryChartData = computed<ChartDataItem[]>(() => {
     const colors = [
       '#3498db', '#e74c3c', '#2ecc71', '#f39c12',
       '#9b59b6', '#1abc9c', '#e67e22', '#34495e'
     ];
-    
-    return this.categorySummary().map((cat, i) => ({
+    const data = this.categorySummary();
+    console.log('Category chart data:', data);
+    return data.map((cat, i) => ({
       label: cat.category,
       value: cat.totalAmount,
       color: colors[i % colors.length]
     }));
-  }
+  });
 
-  get budgetChartData(): BarChartDataItem[] {
+  budgetChartData = computed<BarChartDataItem[]>(() => {
     const budgetSummaries = this.budgetService.categoryBudgetSummaries();
+    console.log('Budget chart data:', budgetSummaries);
     return budgetSummaries
       .filter(bs => bs.budget > 0 || bs.spent > 0)
       .map(bs => ({
@@ -445,7 +448,7 @@ export class AdminDashboardComponent implements OnInit {
         budget: bs.budget,
         actual: bs.spent
       }));
-  }
+  });
 
   getBalanceClass(balance: number): string {
     if (balance > 0.01) return 'balance-positive';

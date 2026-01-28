@@ -26,6 +26,9 @@ import { CommonModule } from '@angular/common';
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
       border-left: 4px solid #5d6d7e;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
+      height: 100%;
+      min-height: 90px;
+      box-sizing: border-box;
     }
     
     .summary-card:hover {
