@@ -69,6 +69,13 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
               name: true,
               role: true
             }
+          },
+          _count: {
+            select: {
+              expenses: true,
+              contributions: true,
+              deposits: true
+            }
           }
         },
         orderBy: { createdAt: 'desc' }
@@ -85,6 +92,13 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
               name: true,
               role: true
             }
+          },
+          _count: {
+            select: {
+              expenses: true,
+              contributions: true,
+              deposits: true
+            }
           }
         }
       });
@@ -92,40 +106,23 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       return res.json({ products: [] });
     }
 
-    // Add counts for each product
-    const productsWithCounts = await Promise.all(
-      products.map(async (product) => {
-        const counts = await prisma.product.findUnique({
-          where: { id: product.id },
-          select: {
-            _count: {
-              select: {
-                expenses: true,
-                contributions: true,
-                deposits: true
-              }
-            }
-          }
-        });
+    // Format products for response
+    const formattedProducts = products.map((product) => ({
+      id: product.id,
+      name: product.name,
+      type: product.type,
+      description: product.description,
+      currency: product.currency,
+      overallBudget: product.overallBudget,
+      isClosed: product.isClosed,
+      createdAt: product.createdAt,
+      userCount: product.users?.length || 0,
+      expenseCount: product._count?.expenses || 0,
+      depositCount: product._count?.deposits || 0,
+      contributionCount: product._count?.contributions || 0
+    }));
 
-        return {
-          id: product.id,
-          name: product.name,
-          type: product.type,
-          description: product.description,
-          currency: product.currency,
-          overallBudget: product.overallBudget,
-          isClosed: product.isClosed,
-          createdAt: product.createdAt,
-          userCount: product.users?.length || 0,
-          expenseCount: counts?._count?.expenses || 0,
-          depositCount: counts?._count?.deposits || 0,
-          contributionCount: counts?._count?.contributions || 0
-        };
-      })
-    );
-
-    res.json({ products: productsWithCounts });
+    res.json({ products: formattedProducts });
 
   } catch (error) {
     console.error('Get products error:', error);
