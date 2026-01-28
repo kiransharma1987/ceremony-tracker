@@ -111,7 +111,7 @@ router.post('/login', async (req, res: Response) => {
         email: user.email,
         name: user.name,
         displayName: user.displayName || user.name,
-        role: user.role.toLowerCase(),
+        role: user.role,
         productId: user.productId,
         productName: user.product?.name // for display
       },
@@ -198,7 +198,7 @@ router.post('/users', authenticateToken, async (req: AuthRequest, res: Response)
         email: newUser.email,
         name: newUser.name,
         displayName: newUser.displayName,
-        role: newUser.role.toLowerCase(),
+        role: newUser.role,
         productId: newUser.productId,
         isActive: newUser.isActive,
         productName: newUser.product?.name
@@ -303,7 +303,7 @@ router.put('/users/:userId', authenticateToken, async (req: AuthRequest, res: Re
         email: updatedUser.email,
         name: updatedUser.name,
         displayName: updatedUser.displayName,
-        role: updatedUser.role.toLowerCase(),
+        role: updatedUser.role,
         productId: updatedUser.productId,
         isActive: updatedUser.isActive,
         productName: updatedUser.product?.name
@@ -433,7 +433,7 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res: Response) => 
       email: user.email,
       name: user.name,
       displayName: user.displayName,
-      role: user.role.toLowerCase(),
+      role: user.role,
       productId: user.productId,
       isActive: user.isActive,
       productName: user.product?.name
