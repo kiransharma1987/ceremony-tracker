@@ -456,6 +456,9 @@ export class UserManagementComponent implements OnInit {
       const errorMessage = error?.error?.error || 'Failed to create user. Please try again.';
       this.errorMsg.set(errorMessage);
       console.error('User creation error:', error);
+      
+      // Still reload users so they can see the existing user with duplicate email
+      await this.loadUsers();
     } finally {
       this.isLoadingSignal.set(false);
     }
