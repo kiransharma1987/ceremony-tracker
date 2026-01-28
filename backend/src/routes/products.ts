@@ -61,46 +61,12 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     if (req.user?.role === 'SUPER_ADMIN') {
       // Super Admin sees all products
       products = await prisma.product.findMany({
-        include: {
-          users: {
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              role: true
-            }
-          },
-          _count: {
-            select: {
-              expenses: true,
-              contributions: true,
-              deposits: true
-            }
-          }
-        },
         orderBy: { createdAt: 'desc' }
       });
     } else if (req.user?.productId) {
       // Other users see only their product
       products = await prisma.product.findMany({
-        where: { id: req.user.productId },
-        include: {
-          users: {
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              role: true
-            }
-          },
-          _count: {
-            select: {
-              expenses: true,
-              contributions: true,
-              deposits: true
-            }
-          }
-        }
+        where: { id: req.user.productId }
       });
     } else {
       return res.json({ products: [] });
@@ -116,10 +82,10 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       overallBudget: product.overallBudget,
       isClosed: product.isClosed,
       createdAt: product.createdAt,
-      userCount: product.users?.length || 0,
-      expenseCount: product._count?.expenses || 0,
-      depositCount: product._count?.deposits || 0,
-      contributionCount: product._count?.contributions || 0
+      userCount: 0,
+      expenseCount: 0,
+      depositCount: 0,
+      contributionCount: 0
     }));
 
     res.json({ products: formattedProducts });
