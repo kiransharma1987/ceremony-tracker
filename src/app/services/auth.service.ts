@@ -121,7 +121,7 @@ export class AuthService {
     }
 
     // Fallback to demo mode for offline/development ONLY if password matches
-    if (password === 'admin123') {
+    if (password === 'puranjana@2026') {
       console.log('Falling back to demo mode');
       const user: User = {
         id: 'KHK',
@@ -165,7 +165,7 @@ export class AuthService {
     } catch (error) {
       console.error('Brother API login failed:', error);
       // Fallback to demo mode if password matches
-      if (password === 'admin123') {
+      if (password === 'padmamma2026') {
         const user: User = {
           id: brotherId,
           role: 'brother',
