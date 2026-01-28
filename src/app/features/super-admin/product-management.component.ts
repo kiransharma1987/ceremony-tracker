@@ -370,8 +370,12 @@ export class ProductManagementComponent implements OnInit {
         description: ''
       });
 
-      // Reload products
-      await this.loadProducts();
+      // Reload products - don't let this failure affect the success message
+      try {
+        await this.loadProducts();
+      } catch (loadError) {
+        console.error('Failed to reload products:', loadError);
+      }
 
       // Clear success message after 5 seconds
       setTimeout(() => this.successMsg.set(''), 5000);

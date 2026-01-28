@@ -109,8 +109,18 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
         });
 
         return {
-          ...product,
-          _count: counts?._count
+          id: product.id,
+          name: product.name,
+          type: product.type,
+          description: product.description,
+          currency: product.currency,
+          overallBudget: product.overallBudget,
+          isClosed: product.isClosed,
+          createdAt: product.createdAt,
+          userCount: product.users?.length || 0,
+          expenseCount: counts?._count?.expenses || 0,
+          depositCount: counts?._count?.deposits || 0,
+          contributionCount: counts?._count?.contributions || 0
         };
       })
     );
