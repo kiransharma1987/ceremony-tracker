@@ -1,8 +1,15 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+
+interface Product {
+  name: string;
+  type: string;
+  overallBudget: number;
+  description: string;
+}
 
 @Component({
   selector: 'app-product-management',
@@ -22,12 +29,12 @@ import { AuthService } from '../../services/auth.service';
           <form (ngSubmit)="createProduct()" class="form">
             <div class="form-group">
               <label>Product Name:</label>
-              <input type="text" [(ngModel)]="newProduct.name" name="name" placeholder="e.g., Sarah's Wedding" required>
+              <input type="text" [(ngModel)]="newProduct().name" name="name" placeholder="e.g., Sarah's Wedding" required>
             </div>
 
             <div class="form-group">
               <label>Product Type:</label>
-              <select [(ngModel)]="newProduct.type" name="type" required>
+              <select [(ngModel)]="newProduct().type" name="type" required>
                 <option value="CEREMONY">Ceremony</option>
                 <option value="WEDDING">Wedding</option>
                 <option value="TEAM_DINNER">Team Dinner</option>
@@ -38,12 +45,12 @@ import { AuthService } from '../../services/auth.service';
 
             <div class="form-group">
               <label>Overall Budget:</label>
-              <input type="number" [(ngModel)]="newProduct.overallBudget" name="overallBudget" placeholder="Enter budget amount" required>
+              <input type="number" [(ngModel)]="newProduct().overallBudget" name="overallBudget" placeholder="Enter budget amount" required>
             </div>
 
             <div class="form-group">
               <label>Description:</label>
-              <textarea [(ngModel)]="newProduct.description" name="description" placeholder="Optional description"></textarea>
+              <textarea [(ngModel)]="newProduct().description" name="description" placeholder="Optional description"></textarea>
             </div>
 
             <button type="submit" class="btn btn-primary">Create Product</button>
@@ -177,7 +184,7 @@ import { AuthService } from '../../services/auth.service';
   `]
 })
 export class ProductManagementComponent {
-  newProduct = signal({
+  newProduct: WritableSignal<Product> = signal({
     name: '',
     type: 'CEREMONY',
     overallBudget: 0,

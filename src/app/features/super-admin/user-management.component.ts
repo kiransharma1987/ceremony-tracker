@@ -1,8 +1,16 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+
+interface User {
+  email: string;
+  name: string;
+  role: string;
+  password: string;
+  productId: string;
+}
 
 @Component({
   selector: 'app-user-management',
@@ -22,17 +30,17 @@ import { AuthService } from '../../services/auth.service';
           <form (ngSubmit)="createUser()" class="form">
             <div class="form-group">
               <label>Email:</label>
-              <input type="email" [(ngModel)]="newUser.email" name="email" placeholder="user@example.com" required>
+              <input type="email" [(ngModel)]="newUser().email" name="email" placeholder="user@example.com" required>
             </div>
 
             <div class="form-group">
               <label>Name:</label>
-              <input type="text" [(ngModel)]="newUser.name" name="name" placeholder="Full name" required>
+              <input type="text" [(ngModel)]="newUser().name" name="name" placeholder="Full name" required>
             </div>
 
             <div class="form-group">
               <label>Role:</label>
-              <select [(ngModel)]="newUser.role" name="role" required>
+              <select [(ngModel)]="newUser().role" name="role" required>
                 <option value="ADMIN">Admin</option>
                 <option value="ORGANIZER">Organizer</option>
                 <option value="ATTENDEE">Attendee</option>
@@ -42,12 +50,12 @@ import { AuthService } from '../../services/auth.service';
 
             <div class="form-group">
               <label>Password:</label>
-              <input type="password" [(ngModel)]="newUser.password" name="password" placeholder="Set password" required>
+              <input type="password" [(ngModel)]="newUser().password" name="password" placeholder="Set password" required>
             </div>
 
             <div class="form-group">
               <label>Product (Optional):</label>
-              <input type="text" [(ngModel)]="newUser.productId" name="productId" placeholder="Select or leave empty for Super Admin users">
+              <input type="text" [(ngModel)]="newUser().productId" name="productId" placeholder="Select or leave empty for Super Admin users">
             </div>
 
             <button type="submit" class="btn btn-primary">Create User</button>
@@ -175,7 +183,7 @@ import { AuthService } from '../../services/auth.service';
   `]
 })
 export class UserManagementComponent {
-  newUser = signal({
+  newUser: WritableSignal<User> = signal({
     email: '',
     name: '',
     role: 'ATTENDEE',
