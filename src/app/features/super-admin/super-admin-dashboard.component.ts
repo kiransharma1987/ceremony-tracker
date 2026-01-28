@@ -1,8 +1,8 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { Product } from '../../models';
+import { ProductService, ProductResponse } from '../../services/product.service';
 
 @Component({
   selector: 'app-super-admin-dashboard',
@@ -120,17 +120,42 @@ import { Product } from '../../models';
   `]
 })
 export class SuperAdminDashboardComponent implements OnInit {
-  products = signal<Product[]>([]);
+  private productsData = signal<ProductResponse[]>([]);
+  readonly products = this.productsData.asReadonly();
+  
+  private usersData = signal<any[]>([]);
+  readonly users = this.usersData.asReadonly();
+  
   currentUser = signal(this.authService.user);
-  totalUsers = signal(0);
+  readonly totalUsers = computed(() => this.users().length);
 
   constructor(
     private authService: AuthService,
+    private productService: ProductService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
-    // Load data if needed
+    this.loadProducts();
+    this.loadUsers();
+  }
+
+  private async loadProducts(): Promise<void> {
+    try {
+      const products = await this.productService.getAllProducts();
+      this.productsData.set(products);
+    } catch (error) {
+      console.error('Failed to load products:', error);
+    }
+  }
+
+  private async loadUsers(): Promise<void> {
+    try {
+      const users = await this.authService.getAllUsers();
+      this.usersData.set(users);
+    } catch (error) {
+      console.error('Failed to load users:', error);
+    }
   }
 
   logout(): void {
