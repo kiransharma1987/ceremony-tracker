@@ -136,6 +136,7 @@ import { AuthService } from '../../services';
       margin: 0 0 0.5rem 0;
       font-size: 1.5rem;
       font-weight: 600;
+      color: white;
     }
     
     .login-header p {
