@@ -197,6 +197,8 @@ import { PieChartComponent, ChartDataItem } from '../../shared/components/charts
     .welcome-header h1 {
       margin: 0 0 0.5rem 0;
       font-size: 1.5rem;
+      color: white;
+      font-weight: 600;
     }
     
     .welcome-header p {
