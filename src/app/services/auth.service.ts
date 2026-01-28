@@ -136,22 +136,49 @@ export class AuthService {
     return false;
   }
 
-  // Brother login via access link
-  loginAsBrother(brotherId: BrotherId, token: string): boolean {
+  // Brother login - uses existing API token if available or authenticates with shared password
+  async loginAsBrother(brotherId: BrotherId, password: string): Promise<boolean> {
     const brother = BROTHERS.find(b => b.id === brotherId);
-    if (brother && (token === 'demo' || this.validateBrotherToken(brotherId, token))) {
+    if (!brother) return false;
+
+    // Try API login with shared password (same as admin)
+    try {
+      const response = await firstValueFrom(
+        this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`, {
+          email: 'admin@ceremony.app',
+          password: password
+        })
+      );
+
       const user: User = {
         id: brotherId,
         role: 'brother',
         brotherId: brotherId,
-        accessToken: token
+        accessToken: response.token
       };
+
+      this.token.set(response.token);
       this.currentUser.set(user);
-      this.token.set(token);
-      this.saveToStorage(token, user);
+      this.saveToStorage(response.token, user);
+      console.log('Brother API login successful');
       return true;
+    } catch (error) {
+      console.error('Brother API login failed:', error);
+      // Fallback to demo mode if password matches
+      if (password === 'admin123') {
+        const user: User = {
+          id: brotherId,
+          role: 'brother',
+          brotherId: brotherId,
+          accessToken: 'demo'
+        };
+        this.currentUser.set(user);
+        this.token.set('demo');
+        this.saveToStorage('demo', user);
+        return true;
+      }
+      return false;
     }
-    return false;
   }
 
   // Contributor login via secure link

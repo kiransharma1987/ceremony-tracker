@@ -59,8 +59,17 @@ import { AuthService } from '../../services';
                     <option value="HNM">HNM</option>
                   </select>
                 </div>
-                <button type="submit" class="btn btn-secondary" [disabled]="!selectedBrother">
-                  View as {{ selectedBrother || 'Brother' }}
+                <div class="form-group">
+                  <label>Password</label>
+                  <input 
+                    type="password" 
+                    [(ngModel)]="brotherPassword" 
+                    name="brotherPassword"
+                    placeholder="Enter password">
+                </div>
+                <div class="error-message" *ngIf="brotherLoginError">{{ brotherLoginError }}</div>
+                <button type="submit" class="btn btn-secondary" [disabled]="!selectedBrother || !brotherPassword || brotherLoading">
+                  {{ brotherLoading ? 'Loading...' : 'View as ' + (selectedBrother || 'Brother') }}
                 </button>
               </form>
             </div>
@@ -284,6 +293,9 @@ export class LoginComponent {
   activeTab: 'admin' | 'brother' | 'contributor' = 'admin';
   adminPassword = '';
   selectedBrother = '';
+  brotherPassword = '';
+  brotherLoginError = '';
+  brotherLoading = false;
   contributorName = '';
   loginError = '';
 
@@ -302,10 +314,17 @@ export class LoginComponent {
     }
   }
 
-  loginAsBrother(): void {
-    if (this.selectedBrother) {
-      this.authService.loginAsBrother(this.selectedBrother as any, 'demo');
-      this.router.navigate(['/brother', this.selectedBrother]);
+  async loginAsBrother(): Promise<void> {
+    if (this.selectedBrother && this.brotherPassword) {
+      this.brotherLoginError = '';
+      this.brotherLoading = true;
+      const success = await this.authService.loginAsBrother(this.selectedBrother as any, this.brotherPassword);
+      this.brotherLoading = false;
+      if (success) {
+        this.router.navigate(['/brother', this.selectedBrother]);
+      } else {
+        this.brotherLoginError = 'Invalid password. Please try again.';
+      }
     }
   }
 
