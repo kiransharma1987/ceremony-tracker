@@ -140,24 +140,95 @@ import { AuthService } from '../../../services';
       .header-content {
         flex-direction: column;
         align-items: stretch;
+        gap: 0.75rem;
       }
       
       .logo-section {
         text-align: center;
       }
+
+      .app-title {
+        font-size: 1rem;
+      }
+
+      .subtitle {
+        font-size: 0.7rem;
+      }
       
       .nav-section {
         justify-content: center;
         order: 3;
+        gap: 0.25rem;
       }
       
       .user-section {
         justify-content: center;
+        gap: 0.5rem;
       }
       
       .nav-link {
         padding: 0.4rem 0.75rem;
         font-size: 0.8rem;
+      }
+
+      .user-role {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+      }
+
+      .btn-logout {
+        padding: 0.35rem 0.75rem;
+        font-size: 0.8rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header {
+        padding: 0.5rem;
+      }
+
+      .header-content {
+        gap: 0.5rem;
+      }
+
+      .app-title {
+        font-size: 0.9rem;
+        letter-spacing: 0;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .nav-section {
+        gap: 0.2rem;
+        overflow-x: auto;
+        padding: 0.25rem 0;
+      }
+
+      .nav-link {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+      }
+
+      .nav-link.active {
+        border-bottom-width: 2px;
+      }
+
+      .user-section {
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+
+      .user-role {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+      }
+
+      .btn-logout {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
       }
     }
   `]

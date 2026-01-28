@@ -102,11 +102,12 @@ import { BudgetIndicatorComponent } from '../../shared/components/budget-indicat
         </div>
       </section>
 
-      <!-- Budget Summary Table -->
+      <!-- Budget Summary Table/Cards -->
       <section class="budget-section">
         <h3 class="section-title">Budget Summary</h3>
         <div class="table-container">
-          <table class="data-table">
+          <!-- Desktop Table View -->
+          <table class="data-table desktop-view">
             <thead>
               <tr>
                 <th>Category</th>
@@ -146,6 +147,64 @@ import { BudgetIndicatorComponent } from '../../shared/components/budget-indicat
               </tr>
             </tfoot>
           </table>
+
+          <!-- Mobile Card View -->
+          <div class="cards-view mobile-view">
+            <div class="budget-card" *ngFor="let summary of budgetService.categoryBudgetSummaries()">
+              <div class="card-header">
+                <span class="card-title">{{ summary.category }}</span>
+                <span class="status-dot" [class]="summary.budget > 0 ? summary.status : 'none'"></span>
+              </div>
+              <div class="card-body">
+                <div class="card-field">
+                  <span class="label">Budget</span>
+                  <span class="value">{{ summary.budget > 0 ? '₹' + (summary.budget | number:'1.0-0':'en-IN') : '-' }}</span>
+                </div>
+                <div class="card-field">
+                  <span class="label">Spent</span>
+                  <span class="value amount">₹{{ summary.spent | number:'1.0-0':'en-IN' }}</span>
+                </div>
+                <div class="card-field">
+                  <span class="label">Remaining</span>
+                  <span class="value" [class]="summary.remaining < 0 ? 'negative' : 'positive'">
+                    {{ summary.budget > 0 ? (summary.remaining >= 0 ? '₹' : '-₹') + (Math.abs(summary.remaining) | number:'1.0-0':'en-IN') : '-' }}
+                  </span>
+                </div>
+                <div class="card-field">
+                  <span class="label">% Used</span>
+                  <span class="value">{{ summary.budget > 0 ? (summary.percentUsed | number:'1.0-0') + '%' : '-' }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Overall Summary Card -->
+            <div class="budget-card overall" *ngIf="budgetService.overallBudget()">
+              <div class="card-header">
+                <span class="card-title overall-title">Overall Budget</span>
+                <span class="status-dot" [class]="budgetService.overallBudgetSummary().status"></span>
+              </div>
+              <div class="card-body">
+                <div class="card-field">
+                  <span class="label">Budget</span>
+                  <span class="value">₹{{ budgetService.overallBudgetSummary().budget | number:'1.0-0':'en-IN' }}</span>
+                </div>
+                <div class="card-field">
+                  <span class="label">Spent</span>
+                  <span class="value amount">₹{{ budgetService.overallBudgetSummary().spent | number:'1.0-0':'en-IN' }}</span>
+                </div>
+                <div class="card-field">
+                  <span class="label">Remaining</span>
+                  <span class="value" [class]="budgetService.overallBudgetSummary().remaining < 0 ? 'negative' : 'positive'">
+                    {{ (budgetService.overallBudgetSummary().remaining >= 0 ? '₹' : '-₹') + (Math.abs(budgetService.overallBudgetSummary().remaining) | number:'1.0-0':'en-IN') }}
+                  </span>
+                </div>
+                <div class="card-field">
+                  <span class="label">% Used</span>
+                  <span class="value">{{ budgetService.overallBudgetSummary().percentUsed | number:'1.0-0' }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -430,20 +489,142 @@ import { BudgetIndicatorComponent } from '../../shared/components/budget-indicat
       font-size: 0.85rem;
       color: #5d6d7e;
     }
+
+    /* Mobile Card View */
+    .cards-view {
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .budget-card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #ecf0f1;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .budget-card.overall {
+      border: 2px solid #3498db;
+      background: #f8f9fa;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-bottom: 1px solid #ecf0f1;
+    }
+
+    .budget-card.overall .card-header {
+      background: #e3f2fd;
+    }
+
+    .card-title {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 0.95rem;
+    }
+
+    .card-title.overall-title {
+      color: #1565c0;
+    }
+
+    .card-body {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .card-field {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .card-field .label {
+      font-size: 0.8rem;
+      color: #7f8c8d;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      min-width: 80px;
+    }
+
+    .card-field .value {
+      font-size: 0.95rem;
+      color: #2c3e50;
+      text-align: right;
+      flex: 1;
+      font-weight: 500;
+    }
+
+    .card-field .value.amount {
+      color: #27ae60;
+      font-weight: 600;
+    }
+
+    .card-field .value.positive {
+      color: #27ae60;
+    }
+
+    .card-field .value.negative {
+      color: #e74c3c;
+      font-weight: 600;
+    }
     
     @media (max-width: 768px) {
       .budget-management {
         padding: 1rem;
       }
+
+      .desktop-view {
+        display: none;
+      }
+
+      .mobile-view {
+        display: flex;
+      }
       
       .category-budgets-grid {
         grid-template-columns: 1fr;
       }
-      
-      .data-table th,
-      .data-table td {
-        padding: 0.5rem;
-        font-size: 0.8rem;
+    }
+
+    @media (max-width: 480px) {
+      .budget-management {
+        padding: 0.75rem;
+      }
+
+      .card-header {
+        padding: 0.75rem;
+      }
+
+      .card-body {
+        padding: 0.75rem;
+        gap: 0.5rem;
+      }
+
+      .card-field {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .card-field .label {
+        min-width: auto;
+      }
+
+      .card-field .value {
+        text-align: left;
+      }
+
+      .category-budget-card {
+        padding: 0.75rem;
       }
     }
   `]

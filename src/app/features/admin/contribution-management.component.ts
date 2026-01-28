@@ -118,9 +118,10 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
         </div>
       </div>
 
-      <!-- Contributions Table -->
+      <!-- Contributions Table/Cards -->
       <div class="table-container">
-        <table class="data-table" *ngIf="contributionService.allContributions().length > 0">
+        <!-- Desktop Table View -->
+        <table class="data-table desktop-view" *ngIf="contributionService.allContributions().length > 0">
           <thead>
             <tr>
               <th>Date</th>
@@ -161,6 +162,53 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
             </tr>
           </tbody>
         </table>
+
+        <!-- Mobile Card View -->
+        <div class="cards-view mobile-view" *ngIf="contributionService.allContributions().length > 0">
+          <div class="contribution-card" *ngFor="let contribution of getSortedContributions()">
+            <div class="card-header">
+              <span class="card-date">{{ contribution.date | date:'dd MMM yyyy' }}</span>
+              <div class="card-actions">
+                <button 
+                  class="btn-icon" 
+                  title="Edit"
+                  (click)="editContribution(contribution)"
+                  [disabled]="settlementService.isClosed()">
+                  ✏️
+                </button>
+                <button 
+                  class="btn-icon btn-danger" 
+                  title="Delete"
+                  (click)="confirmDelete(contribution)"
+                  [disabled]="settlementService.isClosed()">
+                  🗑️
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="card-field">
+                <span class="label">Contributor</span>
+                <span class="value">{{ contribution.contributorName }}</span>
+              </div>
+              <div class="card-field">
+                <span class="label">Relationship</span>
+                <span class="value">
+                  <span class="relationship-badge" [class]="contribution.relationship.toLowerCase()">
+                    {{ contribution.relationship }}
+                  </span>
+                </span>
+              </div>
+              <div class="card-field">
+                <span class="label">Amount</span>
+                <span class="value amount">₹{{ contribution.amount | number:'1.2-2':'en-IN' }}</span>
+              </div>
+              <div class="card-field" *ngIf="contribution.notes">
+                <span class="label">Notes</span>
+                <span class="value notes">{{ contribution.notes }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
         
         <div class="empty-state" *ngIf="contributionService.allContributions().length === 0">
           <span class="empty-icon">🤝</span>
@@ -479,10 +527,93 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
     .empty-state p {
       margin: 0 0 1rem 0;
     }
+
+    /* Mobile Card View */
+    .cards-view {
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .contribution-card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #ecf0f1;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-bottom: 1px solid #ecf0f1;
+    }
+
+    .card-date {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 0.95rem;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .card-body {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .card-field {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .card-field .label {
+      font-size: 0.8rem;
+      color: #7f8c8d;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      min-width: 100px;
+    }
+
+    .card-field .value {
+      font-size: 0.95rem;
+      color: #2c3e50;
+      text-align: right;
+      flex: 1;
+    }
+
+    .card-field .value.amount {
+      font-weight: 600;
+      color: #27ae60;
+    }
+
+    .card-field .value.notes {
+      color: #7f8c8d;
+      word-break: break-word;
+    }
     
     @media (max-width: 768px) {
       .contribution-management {
         padding: 1rem;
+      }
+
+      .desktop-view {
+        display: none;
+      }
+
+      .mobile-view {
+        display: flex;
       }
       
       .page-header {
@@ -490,15 +621,41 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
         gap: 1rem;
         align-items: stretch;
       }
-      
-      .data-table th,
-      .data-table td {
-        padding: 0.6rem 0.5rem;
-        font-size: 0.8rem;
+    }
+
+    @media (max-width: 480px) {
+      .contribution-management {
+        padding: 0.75rem;
       }
-      
-      .notes-col {
-        display: none;
+
+      .card-header {
+        padding: 0.75rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .card-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .card-body {
+        padding: 0.75rem;
+        gap: 0.5rem;
+      }
+
+      .card-field {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .card-field .label {
+        min-width: auto;
+      }
+
+      .card-field .value {
+        text-align: left;
       }
     }
   `]

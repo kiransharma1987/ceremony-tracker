@@ -136,9 +136,10 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
         </div>
       </div>
 
-      <!-- Expenses Table -->
+      <!-- Expenses Table/Cards -->
       <div class="table-container">
-        <table class="data-table" *ngIf="getFilteredExpenses().length > 0">
+        <!-- Desktop Table View -->
+        <table class="data-table desktop-view" *ngIf="getFilteredExpenses().length > 0">
           <thead>
             <tr>
               <th>Date</th>
@@ -181,6 +182,57 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
             </tr>
           </tbody>
         </table>
+
+        <!-- Mobile Card View -->
+        <div class="cards-view mobile-view" *ngIf="getFilteredExpenses().length > 0">
+          <div class="expense-card" *ngFor="let expense of getFilteredExpenses()">
+            <div class="card-header">
+              <span class="card-date">{{ expense.date | date:'dd MMM yyyy' }}</span>
+              <div class="card-actions">
+                <button 
+                  class="btn-icon" 
+                  title="Edit"
+                  (click)="editExpense(expense)"
+                  [disabled]="settlementService.isClosed()">
+                  ✏️
+                </button>
+                <button 
+                  class="btn-icon btn-danger" 
+                  title="Delete"
+                  (click)="confirmDelete(expense)"
+                  [disabled]="settlementService.isClosed()">
+                  🗑️
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="card-field">
+                <span class="label">Title</span>
+                <span class="value">{{ expense.title }}</span>
+              </div>
+              <div class="card-field">
+                <span class="label">Category</span>
+                <span class="value">
+                  <span class="category-badge">{{ expense.category }}</span>
+                </span>
+              </div>
+              <div class="card-field">
+                <span class="label">Amount</span>
+                <span class="value amount">₹{{ expense.amount | number:'1.2-2':'en-IN' }}</span>
+              </div>
+              <div class="card-field">
+                <span class="label">Paid By</span>
+                <span class="value">
+                  <span class="brother-badge">{{ expense.paidBy }}</span>
+                </span>
+              </div>
+              <div class="card-field" *ngIf="expense.notes">
+                <span class="label">Notes</span>
+                <span class="value notes">{{ expense.notes }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
         
         <div class="empty-state" *ngIf="getFilteredExpenses().length === 0">
           <span class="empty-icon">📝</span>
@@ -510,10 +562,93 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
     .empty-state p {
       margin: 0 0 1rem 0;
     }
-    
+
+    /* Mobile Card View */
+    .cards-view {
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .expense-card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #ecf0f1;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-bottom: 1px solid #ecf0f1;
+    }
+
+    .card-date {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 0.95rem;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .card-body {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .card-field {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .card-field .label {
+      font-size: 0.8rem;
+      color: #7f8c8d;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      min-width: 80px;
+    }
+
+    .card-field .value {
+      font-size: 0.95rem;
+      color: #2c3e50;
+      text-align: right;
+      flex: 1;
+    }
+
+    .card-field .value.amount {
+      font-weight: 600;
+      color: #27ae60;
+    }
+
+    .card-field .value.notes {
+      color: #7f8c8d;
+      word-break: break-word;
+    }
+
     @media (max-width: 768px) {
       .expense-management {
         padding: 1rem;
+      }
+
+      .desktop-view {
+        display: none;
+      }
+
+      .mobile-view {
+        display: flex;
       }
       
       .page-header {
@@ -530,15 +665,93 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
       .filter-group {
         justify-content: space-between;
       }
-      
-      .data-table th,
-      .data-table td {
-        padding: 0.6rem 0.5rem;
-        font-size: 0.8rem;
+
+      .stats-bar {
+        flex-direction: column;
+        gap: 0.5rem;
       }
-      
-      .notes-col {
-        display: none;
+
+      .modal {
+        width: 95%;
+        max-width: 100%;
+        max-height: 95vh;
+      }
+
+      .modal-header {
+        padding: 0.75rem 1rem;
+      }
+
+      .modal-header h3 {
+        font-size: 1rem;
+      }
+
+      .expense-form {
+        padding: 1rem;
+      }
+
+      .form-group {
+        margin-bottom: 0.75rem;
+      }
+
+      .form-actions {
+        gap: 0.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .expense-management {
+        padding: 0.5rem;
+      }
+
+      .page-title {
+        font-size: 1rem;
+      }
+
+      .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+      }
+
+      .modal {
+        width: 98%;
+        border-radius: 8px;
+      }
+
+      .modal-header {
+        padding: 0.6rem 0.75rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+      }
+
+      .modal-header h3 {
+        font-size: 0.9rem;
+      }
+
+      .btn-close {
+        position: absolute;
+        top: 0.6rem;
+        right: 0.6rem;
+      }
+
+      .expense-form {
+        padding: 0.75rem;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        padding: 0.5rem;
+        font-size: 16px; /* Prevents auto-zoom on iOS */
+      }
+
+      .form-actions {
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+
+      .form-actions .btn {
+        width: 100%;
       }
     }
   `]

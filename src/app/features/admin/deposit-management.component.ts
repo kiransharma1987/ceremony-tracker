@@ -121,9 +121,10 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
         </div>
       </div>
 
-      <!-- Deposits Table -->
+      <!-- Deposits Table/Cards -->
       <div class="table-container">
-        <table class="data-table">
+        <!-- Desktop Table View -->
+        <table class="data-table desktop-view">
           <thead>
             <tr>
               <th>Date</th>
@@ -165,6 +166,52 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
             }
           </tbody>
         </table>
+
+        <!-- Mobile Card View -->
+        <div class="cards-view mobile-view">
+          @for (deposit of depositService.deposits(); track deposit.id) {
+            <div class="deposit-card">
+              <div class="card-header">
+                <span class="card-date">{{ deposit.date | date:'dd MMM yyyy' }}</span>
+                <div class="card-actions">
+                  <button class="btn-icon" (click)="editDeposit(deposit)" title="Edit" [disabled]="settlementService.isClosed()">✏️</button>
+                  <button class="btn-icon" (click)="confirmDelete(deposit)" title="Delete" [disabled]="settlementService.isClosed()">🗑️</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="card-field">
+                  <span class="label">Deposited By</span>
+                  <span class="value">
+                    <span class="brother-badge" [class]="'brother-' + deposit.depositedBy.toLowerCase()">
+                      {{ deposit.depositedBy }}
+                    </span>
+                    @if (deposit.depositedBy === 'HNK') {
+                      <span class="treasurer-tag">Treasurer</span>
+                    }
+                  </span>
+                </div>
+                <div class="card-field">
+                  <span class="label">Amount</span>
+                  <span class="value amount">₹{{ deposit.amount | number:'1.2-2':'en-IN' }}</span>
+                </div>
+                @if (deposit.notes) {
+                  <div class="card-field">
+                    <span class="label">Notes</span>
+                    <span class="value notes">{{ deposit.notes }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-state-container">
+              <div class="empty-content">
+                <span class="empty-icon">💰</span>
+                <p>No deposits recorded yet</p>
+                <button class="btn btn-primary" (click)="openAddForm()" [disabled]="settlementService.isClosed()">Add First Deposit</button>
+              </div>
+            </div>
+          }
+        </div>
       </div>
 
       <!-- Delete Confirmation Dialog -->
@@ -541,9 +588,97 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
       margin: 0;
     }
 
+    /* Mobile Card View */
+    .cards-view {
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .deposit-card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .card-date {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 0.95rem;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .card-body {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .card-field {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .card-field .label {
+      font-size: 0.8rem;
+      color: #64748b;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      min-width: 100px;
+    }
+
+    .card-field .value {
+      font-size: 0.95rem;
+      color: #1e293b;
+      text-align: right;
+      flex: 1;
+    }
+
+    .card-field .value.amount {
+      font-weight: 600;
+      color: #10b981;
+    }
+
+    .card-field .value.notes {
+      color: #64748b;
+      word-break: break-word;
+    }
+
+    .empty-state-container {
+      padding: 3rem 1rem;
+      text-align: center;
+    }
+
     @media (max-width: 768px) {
       .deposit-management {
         padding: 1rem;
+      }
+
+      .desktop-view {
+        display: none;
+      }
+
+      .mobile-view {
+        display: flex;
       }
 
       .page-header {
@@ -555,18 +690,45 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
       .brother-cards {
         grid-template-columns: repeat(2, 1fr);
       }
+    }
 
-      .data-table {
-        font-size: 0.9rem;
+    @media (max-width: 480px) {
+      .deposit-management {
+        padding: 0.75rem;
       }
 
-      .data-table th,
-      .data-table td {
-        padding: 0.75rem 0.5rem;
+      .card-header {
+        padding: 0.75rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
       }
 
-      .notes {
-        max-width: 100px;
+      .card-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .card-body {
+        padding: 0.75rem;
+        gap: 0.5rem;
+      }
+
+      .card-field {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .card-field .label {
+        min-width: auto;
+      }
+
+      .card-field .value {
+        text-align: left;
+      }
+
+      .brother-cards {
+        grid-template-columns: 1fr;
       }
     }
   `]
