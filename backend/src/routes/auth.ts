@@ -223,8 +223,7 @@ router.get('/users', async (req: AuthRequest, res: Response) => {
         email: true,
         name: true,
         role: true,
-        isActive: true,
-        createdAt: true
+        isActive: true
       }
     });
     return res.json({ users });
