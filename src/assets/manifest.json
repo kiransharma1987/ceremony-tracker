@@ -1,0 +1,10 @@
+{
+  "name": "Ceremony Expense Tracker",
+  "short_name": "CeremonyTracker",
+  "theme_color": "#5d6d7e",
+  "background_color": "#f5f6fa",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "icons": []
+}

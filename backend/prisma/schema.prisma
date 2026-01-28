@@ -1,0 +1,83 @@
+// Prisma schema for Ceremony Expense Tracker
+// Database: MySQL (TiDB Cloud Serverless)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(BROTHER)
+  brotherId String?  @map("brother_id") // HNK, HNP, HNS, HNM for brothers
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  BROTHER
+  CONTRIBUTOR
+}
+
+// Expense model
+model Expense {
+  id        String   @id @default(uuid())
+  title     String
+  category  String   // Food & Catering, Priest Renumeration, etc.
+  amount    Decimal  @db.Decimal(10, 2)
+  paidBy    String   @map("paid_by") // HNK, HNP, HNS, HNM
+  date      DateTime
+  notes     String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("expenses")
+}
+
+// Contribution model (from sister HNU and relatives)
+model Contribution {
+  id              String   @id @default(uuid())
+  contributorName String   @map("contributor_name")
+  relationship    String   // Sister (HNU), Relative, Well-Wisher
+  amount          Decimal  @db.Decimal(10, 2)
+  date            DateTime
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("contributions")
+}
+
+// Category Budget model
+model Budget {
+  id        String   @id @default(uuid())
+  category  String   @unique
+  amount    Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("budgets")
+}
+
+// App Settings model (overall budget, closed status)
+model Settings {
+  id            String    @id @default("app_settings")
+  overallBudget Decimal   @default(0) @map("overall_budget") @db.Decimal(10, 2)
+  isClosed      Boolean   @default(false) @map("is_closed")
+  closedAt      DateTime? @map("closed_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
