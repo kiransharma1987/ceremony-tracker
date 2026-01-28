@@ -320,8 +320,7 @@ export class ProductManagementComponent implements OnInit {
   readonly isFormValid = computed(() => {
     const product = this.newProduct();
     return product.name.trim().length > 0 && 
-           product.type.trim().length > 0 && 
-           product.overallBudget >= 0;
+           product.type.trim().length > 0;
   });
 
   constructor(
