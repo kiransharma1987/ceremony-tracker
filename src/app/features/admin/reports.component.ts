@@ -464,9 +464,8 @@ export class ReportsComponent {
 
   copyBrotherLink(): void {
     const link = `${window.location.origin}/login`;
-    const message = `Padmamma's First Year Ceremony Tracker\n\nLink: ${link}\n\nSelect your name and use password: padmamma2026`;
-    navigator.clipboard.writeText(message);
-    alert('Brother access info copied!');
+    navigator.clipboard.writeText(link);
+    alert('Link copied! Share with brothers along with password: padmamma2026');
   }
 
   copyContributorLink(): void {
