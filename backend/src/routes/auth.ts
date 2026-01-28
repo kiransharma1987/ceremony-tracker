@@ -77,8 +77,7 @@ router.post('/login', async (req, res: Response) => {
         id: user.id,
         email: user.email,
         role: user.role,
-        productId: user.productId,
-        brotherId: user.brotherId // for backward compatibility
+        productId: user.productId
       },
       process.env.JWT_SECRET || 'secret',
       { expiresIn: '7d' }
@@ -114,7 +113,6 @@ router.post('/login', async (req, res: Response) => {
         displayName: user.displayName || user.name,
         role: user.role.toLowerCase(),
         productId: user.productId,
-        brotherId: user.brotherId,
         productName: user.product?.name // for display
       },
       redirectUrl
@@ -437,7 +435,6 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res: Response) => 
       displayName: user.displayName,
       role: user.role.toLowerCase(),
       productId: user.productId,
-      brotherId: user.brotherId,
       isActive: user.isActive,
       productName: user.product?.name
     });
