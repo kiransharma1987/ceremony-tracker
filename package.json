@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "postinstall": "chmod +x node_modules/.bin/* 2>/dev/null || true",
     "build": "npx --yes @angular/cli@17 build --configuration production",
     "vercel-build": "npx --yes @angular/cli@17 build --configuration production",
     "watch": "ng build --watch --configuration development",
