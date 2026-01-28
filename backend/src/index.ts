@@ -9,6 +9,7 @@ import expenseRoutes from './routes/expenses';
 import contributionRoutes from './routes/contributions';
 import budgetRoutes from './routes/budgets';
 import settlementRoutes from './routes/settlement';
+import depositRoutes from './routes/deposits';
 
 // Load environment variables
 dotenv.config();
@@ -34,6 +35,7 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/contributions', contributionRoutes);
 app.use('/api/budgets', budgetRoutes);
 app.use('/api/settlement', settlementRoutes);
+app.use('/api/deposits', depositRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

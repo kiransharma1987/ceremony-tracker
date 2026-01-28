@@ -111,6 +111,32 @@ export interface BrotherSettlement {
   balance: number; // positive = owes, negative = to receive
 }
 
+// Deposit - Brothers depositing money with HNK (treasurer)
+export interface Deposit {
+  id: string;
+  depositedBy: BrotherId;
+  amount: number;
+  date: Date;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DepositFormData {
+  depositedBy: BrotherId;
+  amount: number;
+  date: Date;
+  notes?: string;
+}
+
+export interface DepositSummary {
+  HNK: number;
+  HNP: number;
+  HNS: number;
+  HNM: number;
+  total: number;
+}
+
 export interface SettlementInstruction {
   from: BrotherId;
   to: BrotherId;

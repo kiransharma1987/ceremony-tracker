@@ -28,6 +28,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/contribution-management.component').then(m => m.ContributionManagementComponent)
       },
       {
+        path: 'deposits',
+        loadComponent: () => import('./features/admin/deposit-management.component').then(m => m.DepositManagementComponent)
+      },
+      {
         path: 'budget',
         loadComponent: () => import('./features/admin/budget-management.component').then(m => m.BudgetManagementComponent)
       },
