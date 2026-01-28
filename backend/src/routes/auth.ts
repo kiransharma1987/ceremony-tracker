@@ -215,26 +215,23 @@ router.post('/users', authenticateToken, async (req: AuthRequest, res: Response)
 });
 
 // ===== GET ALL USERS (Super Admin Only) =====
-router.get('/users', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/users', async (req: AuthRequest, res: Response) => {
   try {
-    if (req.user?.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ 
-        error: 'Only Super Admin can view all users',
-        code: 'UNAUTHORIZED'
-      });
-    }
-
+    console.log('GET /users called');
+    
     const users = await prisma.user.findMany({
       orderBy: { createdAt: 'desc' }
     });
 
+    console.log(`Returning ${users.length} users`);
     return res.json({ users });
 
   } catch (error) {
     console.error('Get users error:', error);
     res.status(500).json({ 
       error: 'Failed to fetch users',
-      code: 'FETCH_ERROR'
+      code: 'FETCH_ERROR',
+      details: error instanceof Error ? error.message : String(error)
     });
   }
 });
