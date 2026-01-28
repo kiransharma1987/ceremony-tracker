@@ -12,7 +12,6 @@ import { Product } from '../../models';
     <div class="super-admin-dashboard">
       <div class="dashboard-header">
         <h1>👑 Super Admin Dashboard</h1>
-        <button class="btn btn-logout" (click)="logout()">Logout</button>
       </div>
 
       <div class="dashboard-content">
