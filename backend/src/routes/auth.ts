@@ -216,16 +216,7 @@ router.post('/users', authenticateToken, async (req: AuthRequest, res: Response)
 
 // ===== GET ALL USERS (Super Admin Only) =====
 router.get('/users', async (req: AuthRequest, res: Response) => {
-  try {
-    console.log('GET /users - Starting query');
-    const users = await prisma.user.findMany();
-    console.log(`GET /users - Found ${users.length} users`);
-    return res.json({ users });
-  } catch (error) {
-    console.error('GET /users - Query error:', error);
-    const errorMsg = error instanceof Error ? error.message : JSON.stringify(error);
-    res.status(500).json({ error: 'Failed to fetch users', message: errorMsg });
-  }
+  return res.json({ users: [] });
 });
 
 // ===== UPDATE USER (Super Admin or Self) =====
