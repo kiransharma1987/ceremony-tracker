@@ -1,0 +1,178 @@
+// DRAFT - Updated User Model with New Schema
+// File: src/app/models/user.model.ts.draft
+
+/**
+ * User roles in the system
+ * - SUPER_ADMIN: System administrator (you), can manage all products and users
+ * - ADMIN: Product admin, can manage expenses/contributions within their product
+ * - PARTICIPANT: Brother or family member, view-only access to settlement
+ * - BROTHER: Alias for PARTICIPANT (backward compatibility)
+ * - CONTRIBUTOR: External contributor, can submit contributions
+ */
+export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'PARTICIPANT' | 'BROTHER' | 'CONTRIBUTOR';
+
+/**
+ * User model - represents a user in the system
+ * Users are linked to a product (except SUPER_ADMIN)
+ */
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  displayName?: string;        // Override name per product
+  role: UserRole;
+  productId?: string;           // NULL for SUPER_ADMIN
+  brotherId?: string;           // Legacy field for backward compat
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  accessToken?: string;
+}
+
+/**
+ * User creation request (Super Admin endpoint)
+ */
+export interface CreateUserRequest {
+  email: string;
+  password: string;
+  name: string;
+  displayName?: string;
+  role: Exclude<UserRole, 'SUPER_ADMIN'>; // Can't create super admins
+  productId?: string; // Required except for ADMIN who can be product-wide
+}
+
+/**
+ * User update request
+ */
+export interface UpdateUserRequest {
+  name?: string;
+  displayName?: string;
+  role?: Exclude<UserRole, 'SUPER_ADMIN'>;
+  productId?: string;
+  isActive?: boolean;
+}
+
+/**
+ * Login request
+ */
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+/**
+ * Password change request
+ */
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+/**
+ * Password reset request (Super Admin only)
+ */
+export interface ResetPasswordRequest {
+  newPassword: string;
+}
+
+/**
+ * Login response
+ */
+export interface LoginResponse {
+  token: string;
+  user: User;
+  redirectUrl: string;
+}
+
+/**
+ * User with product info (for listing)
+ */
+export interface UserWithProduct extends User {
+  product?: {
+    id: string;
+    name: string;
+    type: string;
+  };
+}
+
+/**
+ * Role permissions mapping
+ */
+export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
+  SUPER_ADMIN: [
+    'manage_products',
+    'manage_users',
+    'manage_roles',
+    'view_all_products',
+    'system_settings'
+  ],
+  ADMIN: [
+    'manage_expenses',
+    'manage_contributions',
+    'manage_deposits',
+    'manage_budgets',
+    'manage_participants',
+    'create_settlement',
+    'view_reports'
+  ],
+  PARTICIPANT: [
+    'view_settlement',
+    'view_expenses',
+    'view_contributions',
+    'view_budgets',
+    'view_reports'
+  ],
+  BROTHER: [
+    'view_settlement',
+    'view_expenses',
+    'view_contributions',
+    'view_budgets',
+    'view_reports'
+  ],
+  CONTRIBUTOR: [
+    'submit_contribution',
+    'view_contribution_status'
+  ]
+};
+
+/**
+ * Get display role name
+ */
+export function getRoleDisplayName(role: UserRole): string {
+  const displayNames: Record<UserRole, string> = {
+    SUPER_ADMIN: 'Super Administrator',
+    ADMIN: 'Event Administrator',
+    PARTICIPANT: 'Participant',
+    BROTHER: 'Brother',
+    CONTRIBUTOR: 'Contributor'
+  };
+  return displayNames[role];
+}
+
+/**
+ * Get role color for UI
+ */
+export function getRoleColor(role: UserRole): string {
+  const colors: Record<UserRole, string> = {
+    SUPER_ADMIN: '#f44336', // red
+    ADMIN: '#667eea',        // purple
+    PARTICIPANT: '#4caf50',   // green
+    BROTHER: '#2196f3',       // blue
+    CONTRIBUTOR: '#ff9800'   // orange
+  };
+  return colors[role];
+}
+
+/**
+ * Get role icon for UI
+ */
+export function getRoleIcon(role: UserRole): string {
+  const icons: Record<UserRole, string> = {
+    SUPER_ADMIN: '👑',
+    ADMIN: '🔧',
+    PARTICIPANT: '👤',
+    BROTHER: '👥',
+    CONTRIBUTOR: '🤝'
+  };
+  return icons[role];
+}

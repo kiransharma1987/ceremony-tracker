@@ -10,44 +10,89 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Product model - represents an event (ceremony, wedding, etc.)
+model Product {
+  id            String   @id @default(uuid())
+  name          String   // "Padmamma's First Year", "John's Wedding", etc.
+  type          String   // CEREMONY, WEDDING, TEAM_DINNER, SHARED_APARTMENT, TRIP
+  description   String?  @db.Text
+  currency      String   @default("₹") // Currency symbol
+  overallBudget Decimal  @default(0) @map("overall_budget") @db.Decimal(10, 2)
+  isClosed      Boolean  @default(false) @map("is_closed")
+  closedAt      DateTime? @map("closed_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations - all data is discrete per product
+  users        User[]
+  expenses     Expense[]
+  contributions Contribution[]
+  budgets      Budget[]
+  deposits     Deposit[]
+
+  @@index([createdAt])
+  @@map("products")
+}
+
 // User model for authentication
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      Role     @default(BROTHER)
-  brotherId String?  @map("brother_id") // HNK, HNP, HNS, HNM for brothers
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String
+  name         String
+  displayName  String?  @map("display_name") // Override name per product
+  role         UserRole @default(PARTICIPANT) @map("role")
+  isActive     Boolean  @default(true) @map("is_active")
+  
+  // Product association
+  productId    String?  @map("product_id") // NULL for SUPER_ADMIN only
+  product      Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Legacy field for backward compatibility
+  brotherId    String?  @map("brother_id") // HNK, HNP, HNS, HNM for brothers
+  
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
+  @@index([email])
+  @@index([productId])
   @@map("users")
 }
 
-enum Role {
+enum UserRole {
+  SUPER_ADMIN
   ADMIN
-  BROTHER
+  PARTICIPANT
+  BROTHER      // Backward compat for PARTICIPANT
   CONTRIBUTOR
 }
 
-// Expense model
+// Expense model - expenses are discrete per product
 model Expense {
   id        String   @id @default(uuid())
+  productId String   @map("product_id")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
   title     String
   category  String   // Food & Catering, Priest Renumeration, etc.
   amount    Decimal  @db.Decimal(10, 2)
-  paidBy    String   @map("paid_by") // HNK, HNP, HNS, HNM
+  paidBy    String   @map("paid_by") // HNK, HNP, HNS, HNM or participant ID
   date      DateTime
   notes     String?  @db.Text
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([productId])
+  @@index([date])
   @@map("expenses")
 }
 
 // Contribution model (from sister HNU and relatives)
 model Contribution {
   id              String   @id @default(uuid())
+  productId       String   @map("product_id")
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
   contributorName String   @map("contributor_name")
   relationship    String   // Sister (HNU), Relative, Well-Wisher
   amount          Decimal  @db.Decimal(10, 2)
@@ -56,41 +101,41 @@ model Contribution {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
+  @@index([productId])
   @@map("contributions")
 }
 
 // Category Budget model
 model Budget {
   id        String   @id @default(uuid())
-  category  String   @unique
+  productId String   @map("product_id")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  category  String
   amount    Decimal  @db.Decimal(10, 2)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@unique([productId, category])
+  @@index([productId])
   @@map("budgets")
 }
 
-// App Settings model (overall budget, closed status)
-model Settings {
-  id            String    @id @default("app_settings")
-  overallBudget Decimal   @default(0) @map("overall_budget") @db.Decimal(10, 2)
-  isClosed      Boolean   @default(false) @map("is_closed")
-  closedAt      DateTime? @map("closed_at")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+// Note: Settings are now part of Product model (overallBudget, isClosed, closedAt)
 
-  @@map("settings")
-}
-
-// Deposit model - Brothers depositing money with HNK (treasurer)
+// Deposit model - Brothers depositing money with treasurer (discrete per product)
 model Deposit {
   id          String   @id @default(uuid())
-  depositedBy String   @map("deposited_by") // HNK, HNP, HNS, HNM
+  productId   String   @map("product_id")
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  depositedBy String   @map("deposited_by") // HNK, HNP, HNS, HNM or participant ID
   amount      Decimal  @db.Decimal(10, 2)
   date        DateTime
   notes       String?  @db.Text
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  @@index([productId])
   @@map("deposits")
 }

@@ -1,3 +1,6 @@
+// DRAFT - Updated Auth Routes with Generic Login
+// File: backend/src/routes/auth.ts.draft
+
 import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -16,12 +19,11 @@ interface LoginResponse {
     role: string;
     productId?: string;
     brotherId?: string;
-    productName?: string;
   };
   redirectUrl: string;
 }
 
-// ===== GENERIC LOGIN (Email + Password) =====
+// ===== Generic Login (Username/Email + Password) =====
 router.post('/login', async (req, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -48,6 +50,7 @@ router.post('/login', async (req, res: Response) => {
     });
 
     if (!user) {
+      // Don't reveal whether email exists (security best practice)
       return res.status(401).json({ 
         error: 'Invalid email or password',
         code: 'INVALID_CREDENTIALS'
@@ -127,7 +130,7 @@ router.post('/login', async (req, res: Response) => {
   }
 });
 
-// ===== CREATE USER (Super Admin Only) =====
+// ===== Create User (Super Admin Only) =====
 router.post('/users', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     // Only SUPER_ADMIN can create users
@@ -172,7 +175,7 @@ router.post('/users', authenticateToken, async (req: AuthRequest, res: Response)
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
-    const newUser = await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         email: email.toLowerCase(),
         password: hashedPassword,
@@ -194,14 +197,14 @@ router.post('/users', authenticateToken, async (req: AuthRequest, res: Response)
 
     return res.status(201).json({
       user: {
-        id: newUser.id,
-        email: newUser.email,
-        name: newUser.name,
-        displayName: newUser.displayName,
-        role: newUser.role.toLowerCase(),
-        productId: newUser.productId,
-        isActive: newUser.isActive,
-        productName: newUser.product?.name
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        displayName: user.displayName,
+        role: user.role.toLowerCase(),
+        productId: user.productId,
+        isActive: user.isActive,
+        productName: user.product?.name
       }
     });
 
@@ -214,7 +217,7 @@ router.post('/users', authenticateToken, async (req: AuthRequest, res: Response)
   }
 });
 
-// ===== GET ALL USERS (Super Admin Only) =====
+// ===== Get All Users (Super Admin Only) =====
 router.get('/users', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     if (req.user?.role !== 'SUPER_ADMIN') {
@@ -255,7 +258,7 @@ router.get('/users', authenticateToken, async (req: AuthRequest, res: Response) 
   }
 });
 
-// ===== UPDATE USER (Super Admin or Self) =====
+// ===== Update User (Super Admin or Self) =====
 router.put('/users/:userId', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const { userId } = req.params;
@@ -284,7 +287,7 @@ router.put('/users/:userId', authenticateToken, async (req: AuthRequest, res: Re
       if (displayName) updateData.displayName = displayName;
     }
 
-    const updatedUser = await prisma.user.update({
+    const user = await prisma.user.update({
       where: { id: userId },
       data: updateData,
       include: {
@@ -299,14 +302,14 @@ router.put('/users/:userId', authenticateToken, async (req: AuthRequest, res: Re
 
     return res.json({
       user: {
-        id: updatedUser.id,
-        email: updatedUser.email,
-        name: updatedUser.name,
-        displayName: updatedUser.displayName,
-        role: updatedUser.role.toLowerCase(),
-        productId: updatedUser.productId,
-        isActive: updatedUser.isActive,
-        productName: updatedUser.product?.name
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        displayName: user.displayName,
+        role: user.role.toLowerCase(),
+        productId: user.productId,
+        isActive: user.isActive,
+        productName: user.product?.name
       }
     });
 
@@ -319,7 +322,7 @@ router.put('/users/:userId', authenticateToken, async (req: AuthRequest, res: Re
   }
 });
 
-// ===== CHANGE PASSWORD (User themselves) =====
+// ===== Change Password (User themselves) =====
 router.post('/change-password', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -371,7 +374,7 @@ router.post('/change-password', authenticateToken, async (req: AuthRequest, res:
   }
 });
 
-// ===== RESET PASSWORD (Super Admin Only) =====
+// ===== Reset Password (Super Admin Only) =====
 router.post('/reset-password/:userId', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     if (req.user?.role !== 'SUPER_ADMIN') {
@@ -409,41 +412,4 @@ router.post('/reset-password/:userId', authenticateToken, async (req: AuthReques
   }
 });
 
-// ===== GET CURRENT USER =====
-router.get('/me', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user!.id },
-      include: {
-        product: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
-      }
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    res.json({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      displayName: user.displayName,
-      role: user.role.toLowerCase(),
-      productId: user.productId,
-      brotherId: user.brotherId,
-      isActive: user.isActive,
-      productName: user.product?.name
-    });
-  } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({ error: 'Failed to get user' });
-  }
-});
-
 export default router;
-

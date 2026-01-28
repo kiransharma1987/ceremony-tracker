@@ -1,0 +1,301 @@
+// DRAFT - Product Configuration Models
+// File: src/app/models/product-config.model.ts
+// This file is a draft and not committed to main
+
+export interface Product {
+  id: string;
+  name: string;
+  description?: string;
+  eventName: string;
+  currency: string;
+  numParticipants: number;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  archivedAt?: Date;
+}
+
+export interface ProductCategory {
+  id: string;
+  productId: string;
+  name: string;
+  description?: string;
+  icon?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ProductRole {
+  id: string;
+  productId: string;
+  name: string;
+  description?: string;
+  permissions: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ProductParticipant {
+  id: string;
+  productId: string;
+  roleId: string;
+  name: string;
+  displayName?: string;
+  email?: string;
+  phone?: string;
+  role?: ProductRole;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ProductUser {
+  id: string;
+  productId: string;
+  userId: string;
+  participantId: string;
+  roleId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ProductSettings {
+  id: string;
+  productId: string;
+  isClosed: boolean;
+  closedAt?: Date;
+  closedBy?: string;
+  overallBudget: number;
+  customSettings?: Record<string, any>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ProductConfig {
+  product: Product;
+  categories: ProductCategory[];
+  roles: ProductRole[];
+  participants: ProductParticipant[];
+  settings: ProductSettings;
+}
+
+// ============ CREATE REQUEST MODELS ============
+
+export interface CreateProductRequest {
+  name: string;
+  description?: string;
+  eventName: string;
+  currency?: string;
+  numParticipants?: number;
+}
+
+export interface CreateCategoryRequest {
+  name: string;
+  description?: string;
+  icon?: string;
+}
+
+export interface CreateParticipantRequest {
+  name: string;
+  displayName?: string;
+  roleId: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface CreateRoleRequest {
+  name: string;
+  description?: string;
+  permissions?: string[];
+}
+
+// ============ CONSTANTS ============
+
+export const DEFAULT_PERMISSIONS = {
+  ADMIN: [
+    'manage_expenses',
+    'manage_contributions',
+    'manage_deposits',
+    'manage_categories',
+    'manage_participants',
+    'manage_settings',
+    'view_reports',
+    'close_event'
+  ],
+  PARTICIPANT: [
+    'add_expenses',
+    'view_expenses',
+    'view_own_balance',
+    'view_reports'
+  ],
+  VIEWER: [
+    'view_expenses',
+    'view_reports'
+  ]
+};
+
+export const DEFAULT_ROLES = [
+  {
+    name: 'ADMIN',
+    description: 'Full access to all features',
+    permissions: DEFAULT_PERMISSIONS.ADMIN
+  },
+  {
+    name: 'PARTICIPANT',
+    description: 'Can add expenses and view reports',
+    permissions: DEFAULT_PERMISSIONS.PARTICIPANT
+  },
+  {
+    name: 'VIEWER',
+    description: 'Read-only access',
+    permissions: DEFAULT_PERMISSIONS.VIEWER
+  }
+];
+
+export const DEFAULT_CATEGORIES = [
+  {
+    name: 'Food & Catering',
+    icon: '🍽️'
+  },
+  {
+    name: 'Priest Remuneration',
+    icon: '🙏'
+  },
+  {
+    name: 'Return Gifts',
+    icon: '🎁'
+  },
+  {
+    name: 'Decorations',
+    icon: '✨'
+  },
+  {
+    name: 'Music & Entertainment',
+    icon: '🎵'
+  },
+  {
+    name: 'Photography/Videography',
+    icon: '📸'
+  },
+  {
+    name: 'Venue & Furniture',
+    icon: '🏛️'
+  },
+  {
+    name: 'Transportation',
+    icon: '🚗'
+  },
+  {
+    name: 'Miscellaneous',
+    icon: '📦'
+  }
+];
+
+// ============ TEMPLATE CONFIGURATIONS ============
+
+export interface ProductTemplate {
+  name: string;
+  description: string;
+  eventName: string;
+  categories: Array<{ name: string; icon?: string }>;
+  participants: Array<{ name: string }>;
+  numParticipants: number;
+}
+
+export const PRODUCT_TEMPLATES: Record<string, ProductTemplate> = {
+  CEREMONY: {
+    name: 'Ceremony Tracker',
+    description: 'Perfect for family ceremonies and celebrations',
+    eventName: "Family's Special Event",
+    categories: DEFAULT_CATEGORIES,
+    participants: [
+      { name: 'Participant 1' },
+      { name: 'Participant 2' },
+      { name: 'Participant 3' },
+      { name: 'Participant 4' }
+    ],
+    numParticipants: 4
+  },
+  WEDDING: {
+    name: 'Wedding Expense Manager',
+    description: 'Manage wedding expenses between families',
+    eventName: 'Wedding',
+    categories: [
+      { name: 'Venue', icon: '🏛️' },
+      { name: 'Catering', icon: '🍽️' },
+      { name: 'Decorations', icon: '✨' },
+      { name: 'Photography/Video', icon: '📸' },
+      { name: 'Music & Entertainment', icon: '🎵' },
+      { name: 'Flowers', icon: '🌹' },
+      { name: 'Transportation', icon: '🚗' },
+      { name: 'Guest Accommodations', icon: '🏨' },
+      { name: 'Return Gifts', icon: '🎁' },
+      { name: 'Miscellaneous', icon: '📦' }
+    ],
+    participants: [
+      { name: 'Groom Family' },
+      { name: 'Bride Family' },
+      { name: 'Groom', },
+      { name: 'Bride' }
+    ],
+    numParticipants: 4
+  },
+  TEAM_DINNER: {
+    name: 'Team Event Organizer',
+    description: 'Track shared expenses for team events',
+    eventName: 'Team Gathering',
+    categories: [
+      { name: 'Venue', icon: '🏢' },
+      { name: 'Food & Beverages', icon: '🍽️' },
+      { name: 'Activities', icon: '🎮' },
+      { name: 'Decorations', icon: '✨' },
+      { name: 'Gifts/Favors', icon: '🎁' },
+      { name: 'Miscellaneous', icon: '📦' }
+    ],
+    participants: [
+      { name: 'Person A' },
+      { name: 'Person B' },
+      { name: 'Person C' },
+      { name: 'Person D' }
+    ],
+    numParticipants: 4
+  },
+  SHARED_APARTMENT: {
+    name: 'Shared Expenses Tracker',
+    description: 'Track shared apartment or house expenses',
+    eventName: 'Shared Living',
+    categories: [
+      { name: 'Rent', icon: '🏠' },
+      { name: 'Utilities', icon: '⚡' },
+      { name: 'Internet', icon: '📡' },
+      { name: 'Groceries', icon: '🛒' },
+      { name: 'Maintenance', icon: '🔧' },
+      { name: 'Supplies', icon: '📦' },
+      { name: 'Miscellaneous', icon: '💰' }
+    ],
+    participants: [
+      { name: 'Roommate 1' },
+      { name: 'Roommate 2' },
+      { name: 'Roommate 3' }
+    ],
+    numParticipants: 3
+  },
+  TRIP: {
+    name: 'Trip Expense Manager',
+    description: 'Split trip expenses between travelers',
+    eventName: 'Adventure Trip',
+    categories: [
+      { name: 'Accommodation', icon: '🏨' },
+      { name: 'Transportation', icon: '🚗' },
+      { name: 'Food & Dining', icon: '🍽️' },
+      { name: 'Activities & Tours', icon: '🎫' },
+      { name: 'Shopping', icon: '🛍️' },
+      { name: 'Miscellaneous', icon: '📦' }
+    ],
+    participants: [
+      { name: 'Traveler 1' },
+      { name: 'Traveler 2' },
+      { name: 'Traveler 3' }
+    ],
+    numParticipants: 3
+  }
+};

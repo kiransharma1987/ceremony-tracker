@@ -1,0 +1,216 @@
+// DRAFT - Updated Auth Service
+// File: src/app/services/auth.service.ts.draft
+
+import { Injectable, signal, computed } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../environments/environment';
+
+export type UserRole = 'super_admin' | 'admin' | 'participant' | 'brother' | 'contributor';
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  displayName?: string;
+  role: UserRole;
+  productId?: string;
+  brotherId?: string; // for backward compatibility
+  accessToken?: string;
+}
+
+interface LoginResponse {
+  token: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    displayName?: string;
+    role: string;
+    productId?: string;
+    brotherId?: string;
+    productName?: string;
+  };
+  redirectUrl: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthService {
+  private currentUser = signal<User | null>(null);
+  private token = signal<string | null>(null);
+
+  // Computed signals for easy access
+  readonly user = this.currentUser.asReadonly();
+  readonly isAuthenticated = computed(() => this.currentUser() !== null);
+  readonly isSuperAdmin = computed(() => this.currentUser()?.role === 'super_admin');
+  readonly isAdmin = computed(() => this.currentUser()?.role === 'admin');
+  readonly isParticipant = computed(() => 
+    this.currentUser()?.role === 'participant' || this.currentUser()?.role === 'brother'
+  );
+  readonly isContributor = computed(() => this.currentUser()?.role === 'contributor');
+  readonly userRole = computed(() => this.currentUser()?.role);
+  readonly productId = computed(() => this.currentUser()?.productId);
+
+  constructor(
+    private http: HttpClient,
+    private router: Router
+  ) {
+    this.loadFromStorage();
+  }
+
+  /**
+   * Load user and token from local storage
+   */
+  private loadFromStorage(): void {
+    const storedToken = localStorage.getItem('ceremony_tracker_token');
+    const storedUser = localStorage.getItem('ceremony_tracker_user');
+
+    if (storedToken && storedUser) {
+      try {
+        this.token.set(storedToken);
+        this.currentUser.set(JSON.parse(storedUser) as User);
+      } catch (error) {
+        console.error('Error loading from storage:', error);
+        this.clearStorage();
+      }
+    }
+  }
+
+  /**
+   * Save user and token to local storage
+   */
+  private saveToStorage(token: string, user: User): void {
+    localStorage.setItem('ceremony_tracker_token', token);
+    localStorage.setItem('ceremony_tracker_user', JSON.stringify(user));
+  }
+
+  /**
+   * Clear all stored authentication data
+   */
+  private clearStorage(): void {
+    localStorage.removeItem('ceremony_tracker_token');
+    localStorage.removeItem('ceremony_tracker_user');
+  }
+
+  /**
+   * Get HTTP headers with authorization token
+   */
+  getAuthHeaders(): HttpHeaders {
+    const t = this.token();
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      ...(t ? { 'Authorization': `Bearer ${t}` } : {})
+    });
+  }
+
+  /**
+   * Get current token
+   */
+  getToken(): string | null {
+    return this.token();
+  }
+
+  /**
+   * Generic login with email and password
+   */
+  async login(email: string, password: string): Promise<boolean> {
+    try {
+      const response = await firstValueFrom(
+        this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`, {
+          email: email.toLowerCase(),
+          password
+        })
+      );
+
+      const user: User = {
+        id: response.user.id,
+        email: response.user.email,
+        name: response.user.name,
+        displayName: response.user.displayName,
+        role: response.user.role as UserRole,
+        productId: response.user.productId,
+        brotherId: response.user.brotherId,
+        accessToken: response.token
+      };
+
+      this.token.set(response.token);
+      this.currentUser.set(user);
+      this.saveToStorage(response.token, user);
+
+      // Redirect based on role
+      this.redirectAfterLogin(response.redirectUrl);
+      return true;
+    } catch (error: any) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Redirect user based on their role and the provided redirect URL
+   */
+  private redirectAfterLogin(redirectUrl: string): void {
+    // Use the redirect URL from backend response
+    this.router.navigate([redirectUrl]).catch(error => {
+      console.error('Navigation error:', error);
+      // Fallback redirect
+      if (this.isSuperAdmin()) {
+        this.router.navigate(['/super-admin']);
+      } else if (this.isAdmin()) {
+        this.router.navigate(['/admin']);
+      } else {
+        this.router.navigate(['/dashboard']);
+      }
+    });
+  }
+
+  /**
+   * Logout user
+   */
+  logout(): void {
+    this.clearStorage();
+    this.token.set(null);
+    this.currentUser.set(null);
+    this.router.navigate(['/login']);
+  }
+
+  /**
+   * Change password (user themselves)
+   */
+  async changePassword(currentPassword: string, newPassword: string): Promise<boolean> {
+    try {
+      await firstValueFrom(
+        this.http.post<{ message: string }>(
+          `${environment.apiUrl}/auth/change-password`,
+          { currentPassword, newPassword },
+          { headers: this.getAuthHeaders() }
+        )
+      );
+      return true;
+    } catch (error) {
+      console.error('Change password error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Request password reset (Super Admin only)
+   */
+  async forgotPassword(email: string): Promise<boolean> {
+    try {
+      await firstValueFrom(
+        this.http.post<{ message: string }>(
+          `${environment.apiUrl}/auth/forgot-password`,
+          { email }
+        )
+      );
+      return true;
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      throw error;
+    }
+  }
+}

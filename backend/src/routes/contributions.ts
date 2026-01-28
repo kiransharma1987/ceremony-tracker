@@ -4,10 +4,15 @@ import { AuthRequest, authenticateToken, requireAdmin } from '../middleware/auth
 
 const router: Router = Router();
 
-// Get all contributions
+// Get all contributions for a product
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user?.productId) {
+      return res.status(403).json({ error: 'Product context required' });
+    }
+
     const contributions = await prisma.contribution.findMany({
+      where: { productId: req.user.productId },
       orderBy: { date: 'desc' }
     });
 
@@ -24,11 +29,15 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 // Get contribution by ID
 router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user?.productId) {
+      return res.status(403).json({ error: 'Product context required' });
+    }
+
     const contribution = await prisma.contribution.findUnique({
       where: { id: req.params.id }
     });
 
-    if (!contribution) {
+    if (!contribution || contribution.productId !== req.user.productId) {
       return res.status(404).json({ error: 'Contribution not found' });
     }
 
@@ -45,6 +54,10 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
 // Create contribution (Admin only)
 router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user?.productId) {
+      return res.status(403).json({ error: 'Product context required' });
+    }
+
     const { contributorName, relationship, amount, date, notes } = req.body;
 
     if (!contributorName || !relationship || !amount || !date) {
@@ -57,7 +70,8 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
         relationship,
         amount,
         date: new Date(date),
-        notes: notes || null
+        notes: notes || null,
+        productId: req.user.productId
       }
     });
 
@@ -74,6 +88,10 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
 // Update contribution (Admin only)
 router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user?.productId) {
+      return res.status(403).json({ error: 'Product context required' });
+    }
+
     const { contributorName, relationship, amount, date, notes } = req.body;
 
     const contribution = await prisma.contribution.update({

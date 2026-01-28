@@ -29,21 +29,31 @@ const BROTHERS = [
 // Get settlement summary
 router.get('/summary', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    // Get all expenses
-    const expenses = await prisma.expense.findMany();
+    if (!req.user?.productId) {
+      return res.status(403).json({ error: 'Product context required' });
+    }
+
+    // Get all expenses for this product
+    const expenses = await prisma.expense.findMany({
+      where: { productId: req.user.productId }
+    });
     const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
 
-    // Get all contributions
-    const contributions = await prisma.contribution.findMany();
+    // Get all contributions for this product
+    const contributions = await prisma.contribution.findMany({
+      where: { productId: req.user.productId }
+    });
     const totalContributions = contributions.reduce((sum, c) => sum + Number(c.amount), 0);
 
-    // Get all deposits
-    const deposits = await prisma.deposit.findMany();
+    // Get all deposits for this product
+    const deposits = await prisma.deposit.findMany({
+      where: { productId: req.user.productId }
+    });
     const totalDeposits = deposits.reduce((sum, d) => sum + Number(d.amount), 0);
 
-    // Get settings
-    const settings = await prisma.settings.findUnique({
-      where: { id: 'app_settings' }
+    // Get product (contains isClosed and other settings)
+    const product = await prisma.product.findUnique({
+      where: { id: req.user.productId }
     });
 
     // Calculate net expense (after contributions)
@@ -129,8 +139,8 @@ router.get('/summary', authenticateToken, async (req: AuthRequest, res: Response
       sharePerBrother,
       brotherSettlements,
       settlementInstructions,
-      isClosed: settings?.isClosed || false,
-      closedAt: settings?.closedAt || null
+      isClosed: product?.isClosed || false,
+      closedAt: product?.closedAt || null
     });
   } catch (error) {
     console.error('Get settlement summary error:', error);
@@ -141,6 +151,10 @@ router.get('/summary', authenticateToken, async (req: AuthRequest, res: Response
 // Get brother-specific settlement details
 router.get('/brother/:brotherId', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user?.productId) {
+      return res.status(403).json({ error: 'Product context required' });
+    }
+
     const { brotherId } = req.params;
     
     const brother = BROTHERS.find(b => b.id === brotherId);

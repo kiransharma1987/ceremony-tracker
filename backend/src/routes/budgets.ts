@@ -4,10 +4,16 @@ import { AuthRequest, authenticateToken, requireAdmin } from '../middleware/auth
 
 const router: Router = Router();
 
-// Get all budgets
+// Get all budgets for a product
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const budgets = await prisma.budget.findMany();
+    if (!req.user?.productId) {
+      return res.status(403).json({ error: 'Product context required' });
+    }
+
+    const budgets = await prisma.budget.findMany({
+      where: { productId: req.user.productId }
+    });
 
     res.json(budgets.map(b => ({
       ...b,
@@ -22,6 +28,10 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 // Set category budget (Admin only)
 router.post('/category', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user?.productId) {
+      return res.status(403).json({ error: 'Product context required' });
+    }
+
     const { category, amount } = req.body;
 
     if (!category || amount === undefined) {
@@ -29,9 +39,18 @@ router.post('/category', authenticateToken, requireAdmin, async (req: AuthReques
     }
 
     const budget = await prisma.budget.upsert({
-      where: { category },
+      where: {
+        productId_category: {
+          productId: req.user.productId,
+          category
+        }
+      },
       update: { amount },
-      create: { category, amount }
+      create: {
+        category,
+        amount,
+        productId: req.user.productId
+      }
     });
 
     res.json({
@@ -47,8 +66,17 @@ router.post('/category', authenticateToken, requireAdmin, async (req: AuthReques
 // Delete category budget (Admin only)
 router.delete('/category/:category', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user?.productId) {
+      return res.status(403).json({ error: 'Product context required' });
+    }
+
     await prisma.budget.delete({
-      where: { category: req.params.category }
+      where: {
+        productId_category: {
+          productId: req.user.productId,
+          category: req.params.category
+        }
+      }
     });
 
     res.json({ message: 'Budget deleted successfully' });
@@ -58,27 +86,26 @@ router.delete('/category/:category', authenticateToken, requireAdmin, async (req
   }
 });
 
-// Get app settings
+// Get product settings (overall budget, closed status)
 router.get('/settings', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    let settings = await prisma.settings.findUnique({
-      where: { id: 'app_settings' }
+    if (!req.user?.productId) {
+      return res.status(403).json({ error: 'Product context required' });
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id: req.user.productId }
     });
 
-    if (!settings) {
-      // Create default settings
-      settings = await prisma.settings.create({
-        data: {
-          id: 'app_settings',
-          overallBudget: 0,
-          isClosed: false
-        }
-      });
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
     }
 
     res.json({
-      ...settings,
-      overallBudget: Number(settings.overallBudget)
+      id: product.id,
+      overallBudget: Number(product.overallBudget),
+      isClosed: product.isClosed,
+      closedAt: product.closedAt
     });
   } catch (error) {
     console.error('Get settings error:', error);
@@ -89,25 +116,25 @@ router.get('/settings', authenticateToken, async (req: AuthRequest, res: Respons
 // Update overall budget (Admin only)
 router.put('/settings/overall', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user?.productId) {
+      return res.status(403).json({ error: 'Product context required' });
+    }
+
     const { amount } = req.body;
 
     if (amount === undefined) {
       return res.status(400).json({ error: 'Amount is required' });
     }
 
-    const settings = await prisma.settings.upsert({
-      where: { id: 'app_settings' },
-      update: { overallBudget: amount },
-      create: {
-        id: 'app_settings',
-        overallBudget: amount,
-        isClosed: false
-      }
+    const product = await prisma.product.update({
+      where: { id: req.user.productId },
+      data: { overallBudget: amount }
     });
 
     res.json({
-      ...settings,
-      overallBudget: Number(settings.overallBudget)
+      id: product.id,
+      overallBudget: Number(product.overallBudget),
+      isClosed: product.isClosed
     });
   } catch (error) {
     console.error('Update overall budget error:', error);
@@ -118,23 +145,23 @@ router.put('/settings/overall', authenticateToken, requireAdmin, async (req: Aut
 // Close ceremony (Admin only)
 router.put('/settings/close', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
-    const settings = await prisma.settings.upsert({
-      where: { id: 'app_settings' },
-      update: { 
-        isClosed: true,
-        closedAt: new Date()
-      },
-      create: {
-        id: 'app_settings',
-        overallBudget: 0,
+    if (!req.user?.productId) {
+      return res.status(403).json({ error: 'Product context required' });
+    }
+
+    const product = await prisma.product.update({
+      where: { id: req.user.productId },
+      data: { 
         isClosed: true,
         closedAt: new Date()
       }
     });
 
     res.json({
-      ...settings,
-      overallBudget: Number(settings.overallBudget)
+      id: product.id,
+      overallBudget: Number(product.overallBudget),
+      isClosed: product.isClosed,
+      closedAt: product.closedAt
     });
   } catch (error) {
     console.error('Close ceremony error:', error);
@@ -145,8 +172,12 @@ router.put('/settings/close', authenticateToken, requireAdmin, async (req: AuthR
 // Reopen ceremony (Admin only)
 router.put('/settings/reopen', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
-    const settings = await prisma.settings.update({
-      where: { id: 'app_settings' },
+    if (!req.user?.productId) {
+      return res.status(403).json({ error: 'Product context required' });
+    }
+
+    const product = await prisma.product.update({
+      where: { id: req.user.productId },
       data: { 
         isClosed: false,
         closedAt: null
@@ -154,8 +185,9 @@ router.put('/settings/reopen', authenticateToken, requireAdmin, async (req: Auth
     });
 
     res.json({
-      ...settings,
-      overallBudget: Number(settings.overallBudget)
+      id: product.id,
+      overallBudget: Number(product.overallBudget),
+      isClosed: product.isClosed
     });
   } catch (error) {
     console.error('Reopen ceremony error:', error);

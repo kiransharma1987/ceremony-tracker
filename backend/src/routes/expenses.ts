@@ -4,10 +4,21 @@ import { AuthRequest, authenticateToken, requireAdmin } from '../middleware/auth
 
 const router: Router = Router();
 
-// Get all expenses
+// Get all expenses (filtered by product)
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
+    const productId = req.query.productId as string;
+    
+    // If no productId provided, use user's product
+    const filter: any = {};
+    if (productId) {
+      filter.productId = productId;
+    } else if (req.user?.productId) {
+      filter.productId = req.user.productId;
+    }
+
     const expenses = await prisma.expense.findMany({
+      where: filter,
       orderBy: { date: 'desc' }
     });
 
@@ -45,10 +56,16 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
 // Create expense (Admin only)
 router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
-    const { title, category, amount, paidBy, date, notes } = req.body;
+    const { title, category, amount, paidBy, date, notes, productId } = req.body;
 
     if (!title || !category || !amount || !paidBy || !date) {
       return res.status(400).json({ error: 'Title, category, amount, paidBy, and date are required' });
+    }
+
+    // Use provided productId or user's product
+    const finalProductId = productId || req.user?.productId;
+    if (!finalProductId) {
+      return res.status(400).json({ error: 'Product ID is required' });
     }
 
     const expense = await prisma.expense.create({
@@ -58,7 +75,8 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
         amount,
         paidBy,
         date: new Date(date),
-        notes: notes || null
+        notes: notes || null,
+        productId: finalProductId
       }
     });
 
@@ -113,10 +131,18 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, 
   }
 });
 
-// Get expenses summary by category
+// Get expenses summary by category (filtered by product)
 router.get('/summary/by-category', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const expenses = await prisma.expense.findMany();
+    const productId = req.query.productId as string || req.user?.productId;
+    
+    if (!productId) {
+      return res.status(400).json({ error: 'Product ID is required' });
+    }
+
+    const expenses = await prisma.expense.findMany({
+      where: { productId }
+    });
     
     const categoryMap = new Map<string, { total: number; count: number }>();
     let grandTotal = 0;
@@ -145,10 +171,18 @@ router.get('/summary/by-category', authenticateToken, async (req: AuthRequest, r
   }
 });
 
-// Get expenses summary by brother
+// Get expenses summary by brother (filtered by product)
 router.get('/summary/by-brother', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const expenses = await prisma.expense.findMany();
+    const productId = req.query.productId as string || req.user?.productId;
+    
+    if (!productId) {
+      return res.status(400).json({ error: 'Product ID is required' });
+    }
+
+    const expenses = await prisma.expense.findMany({
+      where: { productId }
+    });
     
     const brotherMap = new Map<string, number>();
     ['HNK', 'HNP', 'HNS', 'HNM'].forEach(id => brotherMap.set(id, 0));

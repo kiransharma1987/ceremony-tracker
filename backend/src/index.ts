@@ -5,6 +5,7 @@ import prisma from './config/database';
 
 // Import routes
 import authRoutes from './routes/auth';
+import productsRoutes from './routes/products';
 import expenseRoutes from './routes/expenses';
 import contributionRoutes from './routes/contributions';
 import budgetRoutes from './routes/budgets';
@@ -31,6 +32,7 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/products', productsRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/contributions', contributionRoutes);
 app.use('/api/budgets', budgetRoutes);

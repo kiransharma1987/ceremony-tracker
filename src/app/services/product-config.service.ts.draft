@@ -1,0 +1,346 @@
+// DRAFT - Product Configuration Service
+// File: src/app/services/product-config.service.ts
+// This file is a draft and not committed to main
+
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
+
+export interface Product {
+  id: string;
+  name: string;
+  description?: string;
+  eventName: string;
+  currency: string;
+  numParticipants: number;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  archivedAt?: Date;
+}
+
+export interface ProductCategory {
+  id: string;
+  productId: string;
+  name: string;
+  description?: string;
+  icon?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ProductRole {
+  id: string;
+  productId: string;
+  name: string;
+  description?: string;
+  permissions: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ProductParticipant {
+  id: string;
+  productId: string;
+  roleId: string;
+  name: string;
+  displayName?: string;
+  email?: string;
+  phone?: string;
+  role?: ProductRole;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ProductSettings {
+  id: string;
+  productId: string;
+  isClosed: boolean;
+  closedAt?: Date;
+  closedBy?: string;
+  overallBudget: number;
+  customSettings?: Record<string, any>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ProductConfig {
+  product: Product;
+  categories: ProductCategory[];
+  roles: ProductRole[];
+  participants: ProductParticipant[];
+  settings: ProductSettings;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ProductConfigService {
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+
+  // State
+  private currentProduct = signal<Product | null>(null);
+  private currentConfig = signal<ProductConfig | null>(null);
+  private allProducts = signal<Product[]>([]);
+  private loading = signal(false);
+  private error = signal<string | null>(null);
+
+  // Computed values
+  readonly product = this.currentProduct.asReadonly();
+  readonly config = this.currentConfig.asReadonly();
+  readonly products = this.allProducts.asReadonly();
+  readonly categories = computed(() => this.currentConfig()?.categories || []);
+  readonly roles = computed(() => this.currentConfig()?.roles || []);
+  readonly participants = computed(() => this.currentConfig()?.participants || []);
+  readonly isLoading = this.loading.asReadonly();
+
+  constructor() {
+    this.loadDefaultProduct();
+  }
+
+  private async loadDefaultProduct(): Promise<void> {
+    const token = this.authService.getToken();
+    if (!token) return;
+
+    try {
+      const products = await firstValueFrom(
+        this.http.get<Product[]>(`${environment.apiUrl}/products`, {
+          headers: this.authService.getAuthHeaders()
+        })
+      );
+
+      this.allProducts.set(products);
+      
+      if (products.length > 0) {
+        // Load first product
+        await this.loadProduct(products[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to load products:', error);
+      this.error.set('Failed to load products');
+    }
+  }
+
+  async loadProduct(productId: string): Promise<void> {
+    this.loading.set(true);
+    const token = this.authService.getToken();
+
+    try {
+      const [product, config] = await Promise.all([
+        firstValueFrom(
+          this.http.get<Product>(`${environment.apiUrl}/products/${productId}`, {
+            headers: this.authService.getAuthHeaders()
+          })
+        ),
+        firstValueFrom(
+          this.http.get<ProductConfig>(`${environment.apiUrl}/products/${productId}/config`, {
+            headers: this.authService.getAuthHeaders()
+          })
+        )
+      ]);
+
+      this.currentProduct.set(product);
+      this.currentConfig.set(config);
+    } catch (error) {
+      console.error('Failed to load product config:', error);
+      this.error.set('Failed to load product configuration');
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async createProduct(product: Partial<Product>): Promise<Product> {
+    const token = this.authService.getToken();
+    
+    const newProduct = await firstValueFrom(
+      this.http.post<Product>(`${environment.apiUrl}/products`, product, {
+        headers: this.authService.getAuthHeaders()
+      })
+    );
+
+    this.allProducts.update(products => [...products, newProduct]);
+    return newProduct;
+  }
+
+  async updateProduct(productId: string, updates: Partial<Product>): Promise<void> {
+    await firstValueFrom(
+      this.http.put(`${environment.apiUrl}/products/${productId}`, updates, {
+        headers: this.authService.getAuthHeaders()
+      })
+    );
+
+    const product = this.currentProduct();
+    if (product?.id === productId) {
+      this.currentProduct.set({ ...product, ...updates });
+    }
+  }
+
+  // ============ CATEGORY MANAGEMENT ============
+
+  async createCategory(category: Partial<ProductCategory>): Promise<ProductCategory> {
+    const productId = this.currentProduct()?.id;
+    if (!productId) throw new Error('No product selected');
+
+    const newCategory = await firstValueFrom(
+      this.http.post<ProductCategory>(
+        `${environment.apiUrl}/products/${productId}/categories`,
+        category,
+        { headers: this.authService.getAuthHeaders() }
+      )
+    );
+
+    this.currentConfig.update(config => {
+      if (!config) return config;
+      return { ...config, categories: [...config.categories, newCategory] };
+    });
+
+    return newCategory;
+  }
+
+  async updateCategory(categoryId: string, updates: Partial<ProductCategory>): Promise<void> {
+    const productId = this.currentProduct()?.id;
+    if (!productId) throw new Error('No product selected');
+
+    await firstValueFrom(
+      this.http.put(
+        `${environment.apiUrl}/products/${productId}/categories/${categoryId}`,
+        updates,
+        { headers: this.authService.getAuthHeaders() }
+      )
+    );
+
+    this.currentConfig.update(config => {
+      if (!config) return config;
+      return {
+        ...config,
+        categories: config.categories.map(cat =>
+          cat.id === categoryId ? { ...cat, ...updates } : cat
+        )
+      };
+    });
+  }
+
+  async deleteCategory(categoryId: string): Promise<void> {
+    const productId = this.currentProduct()?.id;
+    if (!productId) throw new Error('No product selected');
+
+    await firstValueFrom(
+      this.http.delete(
+        `${environment.apiUrl}/products/${productId}/categories/${categoryId}`,
+        { headers: this.authService.getAuthHeaders() }
+      )
+    );
+
+    this.currentConfig.update(config => {
+      if (!config) return config;
+      return {
+        ...config,
+        categories: config.categories.filter(cat => cat.id !== categoryId)
+      };
+    });
+  }
+
+  // ============ PARTICIPANT MANAGEMENT ============
+
+  async createParticipant(participant: Partial<ProductParticipant>): Promise<ProductParticipant> {
+    const productId = this.currentProduct()?.id;
+    if (!productId) throw new Error('No product selected');
+
+    const newParticipant = await firstValueFrom(
+      this.http.post<ProductParticipant>(
+        `${environment.apiUrl}/products/${productId}/participants`,
+        participant,
+        { headers: this.authService.getAuthHeaders() }
+      )
+    );
+
+    this.currentConfig.update(config => {
+      if (!config) return config;
+      return { ...config, participants: [...config.participants, newParticipant] };
+    });
+
+    return newParticipant;
+  }
+
+  async updateParticipant(participantId: string, updates: Partial<ProductParticipant>): Promise<void> {
+    const productId = this.currentProduct()?.id;
+    if (!productId) throw new Error('No product selected');
+
+    await firstValueFrom(
+      this.http.put(
+        `${environment.apiUrl}/products/${productId}/participants/${participantId}`,
+        updates,
+        { headers: this.authService.getAuthHeaders() }
+      )
+    );
+
+    this.currentConfig.update(config => {
+      if (!config) return config;
+      return {
+        ...config,
+        participants: config.participants.map(p =>
+          p.id === participantId ? { ...p, ...updates } : p
+        )
+      };
+    });
+  }
+
+  async deleteParticipant(participantId: string): Promise<void> {
+    const productId = this.currentProduct()?.id;
+    if (!productId) throw new Error('No product selected');
+
+    await firstValueFrom(
+      this.http.delete(
+        `${environment.apiUrl}/products/${productId}/participants/${participantId}`,
+        { headers: this.authService.getAuthHeaders() }
+      )
+    );
+
+    this.currentConfig.update(config => {
+      if (!config) return config;
+      return {
+        ...config,
+        participants: config.participants.filter(p => p.id !== participantId)
+      };
+    });
+  }
+
+  // ============ ROLE MANAGEMENT ============
+
+  async createRole(role: Partial<ProductRole>): Promise<ProductRole> {
+    const productId = this.currentProduct()?.id;
+    if (!productId) throw new Error('No product selected');
+
+    const newRole = await firstValueFrom(
+      this.http.post<ProductRole>(
+        `${environment.apiUrl}/products/${productId}/roles`,
+        role,
+        { headers: this.authService.getAuthHeaders() }
+      )
+    );
+
+    this.currentConfig.update(config => {
+      if (!config) return config;
+      return { ...config, roles: [...config.roles, newRole] };
+    });
+
+    return newRole;
+  }
+
+  // ============ UTILITIES ============
+
+  getCategoryName(categoryId: string): string {
+    return this.categories()?.find(c => c.id === categoryId)?.name || 'Unknown';
+  }
+
+  getParticipantName(participantId: string): string {
+    return this.participants()?.find(p => p.id === participantId)?.name || 'Unknown';
+  }
+
+  getRoleName(roleId: string): string {
+    return this.roles()?.find(r => r.id === roleId)?.name || 'Unknown';
+  }
+}

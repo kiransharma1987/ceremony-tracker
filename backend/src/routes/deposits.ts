@@ -4,10 +4,15 @@ import { AuthRequest, authenticateToken, requireAdmin } from '../middleware/auth
 
 const router: Router = Router();
 
-// Get all deposits
+// Get all deposits for a product
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user?.productId) {
+      return res.status(403).json({ error: 'Product context required' });
+    }
+
     const deposits = await prisma.deposit.findMany({
+      where: { productId: req.user.productId },
       orderBy: { date: 'desc' }
     });
 
@@ -24,7 +29,13 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 // Get deposits summary by brother
 router.get('/summary', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const deposits = await prisma.deposit.findMany();
+    if (!req.user?.productId) {
+      return res.status(403).json({ error: 'Product context required' });
+    }
+
+    const deposits = await prisma.deposit.findMany({
+      where: { productId: req.user.productId }
+    });
     
     const summary = {
       HNK: 0,
@@ -51,6 +62,10 @@ router.get('/summary', authenticateToken, async (req: AuthRequest, res: Response
 // Create deposit (admin only)
 router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user?.productId) {
+      return res.status(403).json({ error: 'Product context required' });
+    }
+
     const { depositedBy, amount, date, notes } = req.body;
 
     if (!depositedBy || !amount || !date) {
@@ -67,7 +82,8 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
         depositedBy,
         amount,
         date: new Date(date),
-        notes: notes || null
+        notes: notes || null,
+        productId: req.user.productId
       }
     });
 

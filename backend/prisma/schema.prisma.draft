@@ -1,0 +1,265 @@
+// Prisma schema for Configurable Expense Tracker
+// Database: MySQL (TiDB Cloud Serverless)
+// This is a DRAFT - not committed to main
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ PRODUCT & CONFIGURATION ============
+
+model Product {
+  id            String    @id @default(uuid())
+  name          String    // "Wedding Tracker", "Team Dinner", etc.
+  description   String?   @db.Text
+  eventName     String    // "Sharma-Patel Wedding", "Padmamma's Ceremony"
+  currency      String    @default("₹")
+  numParticipants Int     @default(4)
+  
+  // Relations
+  categories    ProductCategory[]
+  roles         ProductRole[]
+  participants  ProductParticipant[]
+  users         ProductUser[]
+  settings      ProductSettings?
+  expenses      Expense[]
+  contributions Contribution[]
+  deposits      Deposit[]
+  budgets       Budget[]
+  
+  // Metadata
+  createdBy     String    // userId
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  archivedAt    DateTime? @map("archived_at")
+
+  @@index([createdBy])
+  @@map("products")
+}
+
+model ProductRole {
+  id          String    @id @default(uuid())
+  productId   String    @map("product_id")
+  name        String    // "ADMIN", "PARTICIPANT", "VIEWER"
+  description String?   @db.Text
+  permissions String    @db.Text @default("[]") // JSON array of permissions
+  
+  // Relations
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  users       ProductUser[]
+  participants ProductParticipant[]
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([productId, name])
+  @@index([productId])
+  @@map("product_roles")
+}
+
+model ProductCategory {
+  id          String    @id @default(uuid())
+  productId   String    @map("product_id")
+  name        String    // "Catering", "Venue", "Decorations"
+  description String?   @db.Text
+  icon        String?   // emoji or icon name
+  
+  // Relations
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  expenses    Expense[]
+  budgets     Budget[]
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([productId, name])
+  @@index([productId])
+  @@map("product_categories")
+}
+
+model ProductParticipant {
+  id          String    @id @default(uuid())
+  productId   String    @map("product_id")
+  roleId      String    @map("role_id")
+  name        String    // "HNK", "Alice", "Groom"
+  displayName String?   @map("display_name")
+  email       String?
+  phone       String?
+  
+  // Relations
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  role        ProductRole @relation(fields: [roleId], references: [id])
+  users       ProductUser[]
+  expenses    Expense[]
+  deposits    Deposit[]
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([productId, name])
+  @@index([productId])
+  @@index([roleId])
+  @@map("product_participants")
+}
+
+model ProductUser {
+  id            String    @id @default(uuid())
+  productId     String    @map("product_id")
+  userId        String    @map("user_id")
+  participantId String    @map("participant_id")
+  roleId        String    @map("role_id")
+  
+  // Relations
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  participant   ProductParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  role          ProductRole @relation(fields: [roleId], references: [id])
+  
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@unique([productId, userId])
+  @@index([productId])
+  @@index([userId])
+  @@index([participantId])
+  @@map("product_users")
+}
+
+model ProductSettings {
+  id                String    @id @default(uuid())
+  productId         String    @unique @map("product_id")
+  isClosed          Boolean   @default(false) @map("is_closed")
+  closedAt          DateTime? @map("closed_at")
+  closedBy          String?   @map("closed_by")
+  overallBudget     Decimal   @default(0) @db.Decimal(10, 2) @map("overall_budget")
+  customSettings    String?   @db.Text @default("{}") // JSON for future extensibility
+  
+  // Relations
+  product           Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  @@index([productId])
+  @@map("product_settings")
+}
+
+// ============ LEGACY USER MODEL ============
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String
+  name      String
+  
+  // Relations
+  productUsers ProductUser[]
+  
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+// ============ EXPENSE DATA (Modified) ============
+
+model Expense {
+  id          String    @id @default(uuid())
+  productId   String    @map("product_id")
+  categoryId  String    @map("category_id")
+  title       String
+  amount      Decimal   @db.Decimal(10, 2)
+  paidBy      String    @map("paid_by") // participantId
+  date        DateTime
+  notes       String?   @db.Text
+  
+  // Relations
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category    ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  participant ProductParticipant @relation(fields: [paidBy], references: [id])
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([productId])
+  @@index([categoryId])
+  @@index([paidBy])
+  @@map("expenses")
+}
+
+model Contribution {
+  id            String    @id @default(uuid())
+  productId     String    @map("product_id")
+  contributorName String  @map("contributor_name")
+  relationship  String
+  amount        Decimal   @db.Decimal(10, 2)
+  date          DateTime
+  notes         String?   @db.Text
+  
+  // Relations
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@index([productId])
+  @@map("contributions")
+}
+
+model Deposit {
+  id          String    @id @default(uuid())
+  productId   String    @map("product_id")
+  depositedBy String    @map("deposited_by") // participantId
+  amount      Decimal   @db.Decimal(10, 2)
+  date        DateTime
+  notes       String?   @db.Text
+  
+  // Relations
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  participant ProductParticipant @relation(fields: [depositedBy], references: [id])
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([productId])
+  @@index([depositedBy])
+  @@map("deposits")
+}
+
+model Budget {
+  id          String    @id @default(uuid())
+  productId   String    @map("product_id")
+  categoryId  String    @map("category_id")
+  amount      Decimal   @db.Decimal(10, 2)
+  
+  // Relations
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category    ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([productId, categoryId])
+  @@index([productId])
+  @@index([categoryId])
+  @@map("budgets")
+}
+
+// ============ LEGACY SETTINGS MODEL ============
+// Keep for backward compatibility, but migrate to ProductSettings
+
+model Settings {
+  id            String    @id @default("app_settings")
+  overallBudget Decimal   @default(0) @map("overall_budget") @db.Decimal(10, 2)
+  isClosed      Boolean   @default(false) @map("is_closed")
+  closedAt      DateTime? @map("closed_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("settings")
+}

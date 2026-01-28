@@ -1,0 +1,173 @@
+// DRAFT - Role-Based Guards
+// File: src/app/guards/
+
+// ===== SUPER ADMIN GUARD =====
+// File: src/app/guards/super-admin.guard.ts.draft
+
+import { Injectable } from '@angular/core';
+import { CanActivate, Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class SuperAdminGuard implements CanActivate {
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  canActivate(): boolean {
+    if (this.authService.isSuperAdmin()) {
+      return true;
+    }
+
+    console.warn('Super Admin access denied');
+    this.router.navigate(['/login']);
+    return false;
+  }
+}
+
+// ===== ADMIN GUARD =====
+// File: src/app/guards/admin.guard.ts.draft
+
+import { Injectable } from '@angular/core';
+import { CanActivate, Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AdminGuard implements CanActivate {
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  canActivate(): boolean {
+    if (this.authService.isAdmin()) {
+      return true;
+    }
+
+    console.warn('Admin access denied');
+    this.router.navigate(['/login']);
+    return false;
+  }
+}
+
+// ===== PARTICIPANT GUARD =====
+// File: src/app/guards/participant.guard.ts.draft
+
+import { Injectable } from '@angular/core';
+import { CanActivate, Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ParticipantGuard implements CanActivate {
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  canActivate(): boolean {
+    if (this.authService.isParticipant()) {
+      return true;
+    }
+
+    console.warn('Participant access denied');
+    this.router.navigate(['/login']);
+    return false;
+  }
+}
+
+// ===== CONTRIBUTOR GUARD =====
+// File: src/app/guards/contributor.guard.ts.draft
+
+import { Injectable } from '@angular/core';
+import { CanActivate, Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ContributorGuard implements CanActivate {
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  canActivate(): boolean {
+    if (this.authService.isContributor()) {
+      return true;
+    }
+
+    console.warn('Contributor access denied');
+    this.router.navigate(['/login']);
+    return false;
+  }
+}
+
+// ===== AUTHENTICATED GUARD =====
+// File: src/app/guards/authenticated.guard.ts.draft
+
+import { Injectable } from '@angular/core';
+import { CanActivate, Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthenticatedGuard implements CanActivate {
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  canActivate(): boolean {
+    if (this.authService.isAuthenticated()) {
+      return true;
+    }
+
+    this.router.navigate(['/login']);
+    return false;
+  }
+}
+
+// ===== LOGOUT GUARD (Prevent authenticated users accessing login) =====
+// File: src/app/guards/no-auth.guard.ts.draft
+
+import { Injectable } from '@angular/core';
+import { CanActivate, Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class NoAuthGuard implements CanActivate {
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  canActivate(): boolean {
+    if (this.authService.isAuthenticated()) {
+      // Already logged in, redirect to dashboard
+      this.router.navigate(['/dashboard']);
+      return false;
+    }
+
+    return true;
+  }
+}
+
+// ===== INDEX FILE =====
+// File: src/app/guards/index.ts.draft
+
+export * from './super-admin.guard';
+export * from './admin.guard';
+export * from './participant.guard';
+export * from './contributor.guard';
+export * from './authenticated.guard';
+export * from './no-auth.guard';
