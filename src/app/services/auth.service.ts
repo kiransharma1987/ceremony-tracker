@@ -136,17 +136,20 @@ export class AuthService {
     return false;
   }
 
-  // Brother login - uses existing API token if available or authenticates with shared password
+  // Brother login - uses API authentication with admin credentials
   async loginAsBrother(brotherId: BrotherId, password: string): Promise<boolean> {
     const brother = BROTHERS.find(b => b.id === brotherId);
     if (!brother) return false;
 
-    // Try API login with shared password (same as admin)
+    // Brother password maps to admin password for API access
+    const apiPassword = password === 'padmamma2026' ? 'puranjana@2026' : password;
+
+    // Try API login with admin credentials
     try {
       const response = await firstValueFrom(
         this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`, {
           email: 'admin@ceremony.app',
-          password: password
+          password: apiPassword
         })
       );
 
@@ -164,7 +167,7 @@ export class AuthService {
       return true;
     } catch (error) {
       console.error('Brother API login failed:', error);
-      // Fallback to demo mode if password matches
+      // Fallback to demo mode only for development
       if (password === 'padmamma2026') {
         const user: User = {
           id: brotherId,
