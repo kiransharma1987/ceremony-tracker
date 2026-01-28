@@ -1,15 +1,5 @@
 {
-  "version": 2,
-  "buildCommand": "npx ng build --configuration production",
-  "outputDirectory": "dist/ceremony-expense-tracker/browser",
-  "framework": null,
-  "routes": [
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
