@@ -225,41 +225,10 @@ router.get('/users', authenticateToken, async (req: AuthRequest, res: Response) 
     }
 
     const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        productId: true,
-        isActive: true,
-        createdAt: true
-      },
       orderBy: { createdAt: 'desc' }
     });
 
-    // Fetch product names separately for each user
-    const usersWithProducts = await Promise.all(
-      users.map(async (user) => {
-        let productName = null;
-        try {
-          if (user.productId) {
-            const product = await prisma.product.findUnique({
-              where: { id: user.productId },
-              select: { name: true }
-            });
-            productName = product?.name || null;
-          }
-        } catch (err) {
-          console.error(`Error fetching product for user ${user.id}:`, err);
-        }
-        return {
-          ...user,
-          productName
-        };
-      })
-    );
-
-    return res.json({ users: usersWithProducts });
+    return res.json({ users });
 
   } catch (error) {
     console.error('Get users error:', error);
