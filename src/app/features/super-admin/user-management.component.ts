@@ -59,7 +59,7 @@ interface UserForm {
               <input type="text" [(ngModel)]="newUser().productId" name="productId" placeholder="Select or leave empty for Super Admin users">
             </div>
 
-            <button type="submit" class="btn btn-primary" [disabled]="!isFormValid()">
+            <button type="submit" class="btn btn-primary">
               {{ isLoading() ? 'Creating...' : 'Create User' }}
             </button>
           </form>
@@ -380,13 +380,13 @@ export class UserManagementComponent implements OnInit {
   async createUser(): Promise<void> {
     const user = this.newUser();
 
-    if (!this.isFormValid()) {
-      this.errorMsg.set('Please fill in all required fields');
+    // Validate email
+    if (!user.email || !user.email.trim()) {
+      this.errorMsg.set('Email is required');
       setTimeout(() => this.errorMsg.set(''), 5000);
       return;
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(user.email)) {
       this.errorMsg.set('Please enter a valid email address');
@@ -394,7 +394,27 @@ export class UserManagementComponent implements OnInit {
       return;
     }
 
-    // Validate password length
+    // Validate name
+    if (!user.name || !user.name.trim()) {
+      this.errorMsg.set('Name is required');
+      setTimeout(() => this.errorMsg.set(''), 5000);
+      return;
+    }
+
+    // Validate role
+    if (!user.role || !user.role.trim()) {
+      this.errorMsg.set('Role is required');
+      setTimeout(() => this.errorMsg.set(''), 5000);
+      return;
+    }
+
+    // Validate password
+    if (!user.password || !user.password.trim()) {
+      this.errorMsg.set('Password is required');
+      setTimeout(() => this.errorMsg.set(''), 5000);
+      return;
+    }
+
     if (user.password.length < 6) {
       this.errorMsg.set('Password must be at least 6 characters');
       setTimeout(() => this.errorMsg.set(''), 5000);

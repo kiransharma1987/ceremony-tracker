@@ -54,7 +54,7 @@ interface Product {
               <textarea [(ngModel)]="newProduct().description" name="description" placeholder="Optional description"></textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary" [disabled]="!isFormValid()">
+            <button type="submit" class="btn btn-primary">
               {{ isLoading() ? 'Creating...' : 'Create Product' }}
             </button>
           </form>
@@ -335,8 +335,15 @@ export class ProductManagementComponent implements OnInit {
   async createProduct(): Promise<void> {
     const product = this.newProduct();
     
-    if (!this.isFormValid()) {
-      this.errorMsg.set('Please fill in all required fields');
+    // Validate required fields
+    if (!product.name || !product.name.trim()) {
+      this.errorMsg.set('Product name is required');
+      setTimeout(() => this.errorMsg.set(''), 5000);
+      return;
+    }
+    
+    if (!product.type || !product.type.trim()) {
+      this.errorMsg.set('Product type is required');
       setTimeout(() => this.errorMsg.set(''), 5000);
       return;
     }
