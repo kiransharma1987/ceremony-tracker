@@ -87,6 +87,7 @@ import { AuthService } from '../../../services';
       border-radius: 6px;
       font-size: 0.9rem;
       transition: all 0.2s ease;
+      border-bottom: 3px solid transparent;
     }
     
     .nav-link:hover {
@@ -95,9 +96,11 @@ import { AuthService } from '../../../services';
     }
     
     .nav-link.active {
-      background: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.25);
       color: white;
-      font-weight: 500;
+      font-weight: 600;
+      border-bottom-color: #2ecc71;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
     .user-section {
