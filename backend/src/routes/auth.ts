@@ -233,18 +233,30 @@ router.get('/users', authenticateToken, async (req: AuthRequest, res: Response) 
         role: true,
         productId: true,
         isActive: true,
-        createdAt: true,
-        product: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
+        createdAt: true
       },
       orderBy: { createdAt: 'desc' }
     });
 
-    return res.json({ users });
+    // Add product names
+    const usersWithProducts = await Promise.all(
+      users.map(async (user) => {
+        let productName = null;
+        if (user.productId) {
+          const product = await prisma.product.findUnique({
+            where: { id: user.productId },
+            select: { name: true }
+          });
+          productName = product?.name;
+        }
+        return {
+          ...user,
+          productName
+        };
+      })
+    );
+
+    return res.json({ users: usersWithProducts });
 
   } catch (error) {
     console.error('Get users error:', error);
