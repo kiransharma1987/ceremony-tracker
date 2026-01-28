@@ -46,7 +46,7 @@ export class DepositService {
     this.loadDeposits();
   }
 
-  private getAuthHeaders() {
+  private getAuthHeaders(): { [key: string]: string } {
     const token = localStorage.getItem('token');
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
