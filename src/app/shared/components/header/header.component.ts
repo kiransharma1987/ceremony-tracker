@@ -17,7 +17,7 @@ import { AuthService } from '../../../services';
         
         <nav class="nav-section" *ngIf="authService.isAuthenticated()">
           <ng-container *ngIf="authService.isAdmin()">
-            <a routerLink="/admin" routerLinkActive="active" routerLinkActiveOptions="{ exact: true }" class="nav-link">Dashboard</a>
+            <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">Dashboard</a>
             <a routerLink="/admin/expenses" routerLinkActive="active" class="nav-link">Expenses</a>
             <a routerLink="/admin/contributions" routerLinkActive="active" class="nav-link">Contributions</a>
             <a routerLink="/admin/deposits" routerLinkActive="active" class="nav-link">Deposits</a>
