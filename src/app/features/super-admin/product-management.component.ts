@@ -1,8 +1,9 @@
-import { Component, OnInit, signal, WritableSignal } from '@angular/core';
+import { Component, OnInit, signal, WritableSignal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { ProductService, ProductResponse } from '../../services/product.service';
 
 interface Product {
   name: string;
@@ -26,7 +27,7 @@ interface Product {
       <div class="content">
         <div class="section">
           <h2>Create New Product</h2>
-          <form (ngSubmit)="createProduct()" class="form">
+          <form (ngSubmit)="createProduct()" class="form" *ngIf="!isLoading()">
             <div class="form-group">
               <label>Product Name:</label>
               <input type="text" [(ngModel)]="newProduct().name" name="name" placeholder="e.g., Sarah's Wedding" required>
@@ -53,15 +54,46 @@ interface Product {
               <textarea [(ngModel)]="newProduct().description" name="description" placeholder="Optional description"></textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary">Create Product</button>
+            <button type="submit" class="btn btn-primary" [disabled]="!isFormValid()">
+              {{ isLoading() ? 'Creating...' : 'Create Product' }}
+            </button>
           </form>
+
+          <div *ngIf="isLoading()" class="loading-spinner">
+            <p>Creating product...</p>
+          </div>
+
+          <div *ngIf="successMessage()" class="alert alert-success">
+            ✅ {{ successMessage() }}
+          </div>
+
+          <div *ngIf="errorMessage()" class="alert alert-error">
+            ❌ {{ errorMessage() }}
+          </div>
         </div>
 
         <div class="section">
-          <h2>Existing Products</h2>
-          <p class="info-text">Products will be listed here once created. Each product can have its own users and expenses.</p>
-          <div class="empty-state">
+          <h2>Existing Products ({{ products().length }})</h2>
+          <p class="info-text">All products managed in this system</p>
+          
+          <div *ngIf="products().length === 0" class="empty-state">
             <p>No products created yet</p>
+          </div>
+
+          <div *ngIf="products().length > 0" class="products-grid">
+            <div *ngFor="let product of products()" class="product-card">
+              <div class="product-header">
+                <h3>{{ product.name }}</h3>
+                <span class="product-type">{{ product.type }}</span>
+              </div>
+              <div class="product-info">
+                <p><strong>Budget:</strong> {{ product.currency }}{{ product.overallBudget }}</p>
+                <p *ngIf="product.description"><strong>Description:</strong> {{ product.description }}</p>
+                <p><strong>Status:</strong> {{ product.isClosed ? 'Closed' : 'Active' }}</p>
+                <p *ngIf="product.userCount"><strong>Users:</strong> {{ product.userCount }}</p>
+                <p *ngIf="product.expenseCount"><strong>Expenses:</strong> {{ product.expenseCount }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -169,6 +201,88 @@ interface Product {
       background-color: #45a049;
     }
 
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .alert {
+      padding: 15px 20px;
+      border-radius: 6px;
+      margin-top: 15px;
+      font-weight: 500;
+    }
+
+    .alert-success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .alert-error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .loading-spinner {
+      padding: 20px;
+      text-align: center;
+      color: #666;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .product-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .product-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 15px;
+      gap: 10px;
+    }
+
+    .product-header h3 {
+      margin: 0;
+      font-size: 18px;
+      color: #333;
+      flex: 1;
+    }
+
+    .product-type {
+      background-color: #667eea;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .product-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .product-info p {
+      margin: 0;
+      font-size: 14px;
+      color: #555;
+    }
+
     .info-text {
       color: #666;
       margin: 0 0 15px 0;
@@ -183,7 +297,7 @@ interface Product {
     }
   `]
 })
-export class ProductManagementComponent {
+export class ProductManagementComponent implements OnInit {
   newProduct: WritableSignal<Product> = signal({
     name: '',
     type: 'CEREMONY',
@@ -191,11 +305,87 @@ export class ProductManagementComponent {
     description: ''
   });
 
-  constructor(public authService: AuthService) {}
+  private productsData = signal<ProductResponse[]>([]);
+  readonly products = this.productsData.asReadonly();
+  
+  private isLoadingSignal = signal(false);
+  readonly isLoading = this.isLoadingSignal.asReadonly();
+  
+  private successMsg = signal('');
+  readonly successMessage = this.successMsg.asReadonly();
+  
+  private errorMsg = signal('');
+  readonly errorMessage = this.errorMsg.asReadonly();
 
-  createProduct(): void {
-    console.log('Create product:', this.newProduct());
-    // TODO: Implement product creation API call
+  readonly isFormValid = computed(() => {
+    const product = this.newProduct();
+    return product.name.trim().length > 0 && 
+           product.type.trim().length > 0 && 
+           product.overallBudget >= 0;
+  });
+
+  constructor(
+    public authService: AuthService,
+    private productService: ProductService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadProducts();
+  }
+
+  async createProduct(): Promise<void> {
+    const product = this.newProduct();
+    
+    if (!this.isFormValid()) {
+      this.errorMsg.set('Please fill in all required fields');
+      setTimeout(() => this.errorMsg.set(''), 5000);
+      return;
+    }
+
+    this.isLoadingSignal.set(true);
+    this.errorMsg.set('');
+    this.successMsg.set('');
+
+    try {
+      await this.productService.createProduct({
+        name: product.name,
+        type: product.type,
+        overallBudget: product.overallBudget,
+        description: product.description || undefined
+      });
+
+      this.successMsg.set(`Product "${product.name}" created successfully!`);
+      
+      // Reset form
+      this.newProduct.set({
+        name: '',
+        type: 'CEREMONY',
+        overallBudget: 0,
+        description: ''
+      });
+
+      // Reload products
+      await this.loadProducts();
+
+      // Clear success message after 5 seconds
+      setTimeout(() => this.successMsg.set(''), 5000);
+    } catch (error: any) {
+      const errorMessage = error?.error?.error || 'Failed to create product. Please try again.';
+      this.errorMsg.set(errorMessage);
+      console.error('Product creation error:', error);
+    } finally {
+      this.isLoadingSignal.set(false);
+    }
+  }
+
+  private async loadProducts(): Promise<void> {
+    try {
+      const products = await this.productService.getAllProducts();
+      this.productsData.set(products);
+    } catch (error) {
+      console.error('Failed to load products:', error);
+      this.productsData.set([]);
+    }
   }
 }
 

@@ -9,6 +9,7 @@ export interface User {
   displayName?: string;
   role: UserRole;
   productId?: string;
+  productName?: string;
   isActive: boolean;
   createdAt?: Date;
   updatedAt?: Date;
