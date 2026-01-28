@@ -172,13 +172,17 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
           @for (deposit of depositService.deposits(); track deposit.id) {
             <div class="deposit-card">
               <div class="card-header">
-                <span class="card-date">{{ deposit.date | date:'dd MMM yyyy' }}</span>
+                <span class="card-title">{{ deposit.depositedBy }} - ₹{{ deposit.amount | number:'1.2-2':'en-IN' }}</span>
                 <div class="card-actions">
                   <button class="btn-icon" (click)="editDeposit(deposit)" title="Edit" [disabled]="settlementService.isClosed()">✏️</button>
                   <button class="btn-icon" (click)="confirmDelete(deposit)" title="Delete" [disabled]="settlementService.isClosed()">🗑️</button>
                 </div>
               </div>
               <div class="card-body">
+                <div class="card-field">
+                  <span class="label">Date</span>
+                  <span class="value">{{ deposit.date | date:'dd MMM yyyy' }}</span>
+                </div>
                 <div class="card-field">
                   <span class="label">Deposited By</span>
                   <span class="value">
@@ -612,10 +616,14 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
       border-bottom: 1px solid #e2e8f0;
     }
 
-    .card-date {
+    .card-title {
       font-weight: 600;
       color: #1e293b;
       font-size: 0.95rem;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .card-actions {

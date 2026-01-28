@@ -187,7 +187,7 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
         <div class="cards-view mobile-view" *ngIf="getFilteredExpenses().length > 0">
           <div class="expense-card" *ngFor="let expense of getFilteredExpenses()">
             <div class="card-header">
-              <span class="card-date">{{ expense.date | date:'dd MMM yyyy' }}</span>
+              <span class="card-title">{{ expense.title }}</span>
               <div class="card-actions">
                 <button 
                   class="btn-icon" 
@@ -207,8 +207,8 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
             </div>
             <div class="card-body">
               <div class="card-field">
-                <span class="label">Title</span>
-                <span class="value">{{ expense.title }}</span>
+                <span class="label">Date</span>
+                <span class="value">{{ expense.date | date:'dd MMM yyyy' }}</span>
               </div>
               <div class="card-field">
                 <span class="label">Category</span>
@@ -587,10 +587,14 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
       border-bottom: 1px solid #ecf0f1;
     }
 
-    .card-date {
+    .card-title {
       font-weight: 600;
       color: #2c3e50;
       font-size: 0.95rem;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .card-actions {
