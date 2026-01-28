@@ -229,7 +229,6 @@ router.get('/users', authenticateToken, async (req: AuthRequest, res: Response) 
         id: true,
         email: true,
         name: true,
-        displayName: true,
         role: true,
         productId: true,
         isActive: true,
@@ -238,16 +237,20 @@ router.get('/users', authenticateToken, async (req: AuthRequest, res: Response) 
       orderBy: { createdAt: 'desc' }
     });
 
-    // Add product names
+    // Fetch product names separately for each user
     const usersWithProducts = await Promise.all(
       users.map(async (user) => {
         let productName = null;
-        if (user.productId) {
-          const product = await prisma.product.findUnique({
-            where: { id: user.productId },
-            select: { name: true }
-          });
-          productName = product?.name;
+        try {
+          if (user.productId) {
+            const product = await prisma.product.findUnique({
+              where: { id: user.productId },
+              select: { name: true }
+            });
+            productName = product?.name || null;
+          }
+        } catch (err) {
+          console.error(`Error fetching product for user ${user.id}:`, err);
         }
         return {
           ...user,
