@@ -41,15 +41,12 @@ model User {
   password     String
   name         String
   displayName  String?  @map("display_name") // Override name per product
-  role         UserRole @default(PARTICIPANT) @map("role")
+  role         UserRole @default(ATTENDEE) @map("role")
   isActive     Boolean  @default(true) @map("is_active")
   
   // Product association
   productId    String?  @map("product_id") // NULL for SUPER_ADMIN only
   product      Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
-  // Legacy field for backward compatibility
-  brotherId    String?  @map("brother_id") // HNK, HNP, HNS, HNM for brothers
   
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
@@ -62,9 +59,9 @@ model User {
 enum UserRole {
   SUPER_ADMIN
   ADMIN
-  PARTICIPANT
-  BROTHER      // Backward compat for PARTICIPANT
-  CONTRIBUTOR
+  ORGANIZER
+  ATTENDEE
+  SPONSOR
 }
 
 // Expense model - expenses are discrete per product

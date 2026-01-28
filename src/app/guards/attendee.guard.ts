@@ -5,18 +5,18 @@ import { AuthService } from '../services/auth.service';
 @Injectable({
   providedIn: 'root'
 })
-export class ParticipantGuard implements CanActivate {
+export class AttendeeGuard implements CanActivate {
   constructor(
     private authService: AuthService,
     private router: Router
   ) {}
 
   canActivate(): boolean {
-    if (this.authService.isParticipant()) {
+    if (this.authService.isAttendee()) {
       return true;
     }
 
-    console.warn('Participant access denied');
+    console.warn('Attendee access denied');
     this.router.navigate(['/login']);
     return false;
   }

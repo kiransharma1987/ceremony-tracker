@@ -93,12 +93,14 @@ router.post('/login', async (req, res: Response) => {
       case 'ADMIN':
         redirectUrl = '/admin';
         break;
-      case 'PARTICIPANT':
-      case 'BROTHER':
-        redirectUrl = '/brother';
+      case 'ORGANIZER':
+        redirectUrl = '/organizer';
         break;
-      case 'CONTRIBUTOR':
-        redirectUrl = '/contributor';
+      case 'ATTENDEE':
+        redirectUrl = '/attendee';
+        break;
+      case 'SPONSOR':
+        redirectUrl = '/sponsor';
         break;
     }
 
@@ -148,7 +150,7 @@ router.post('/users', authenticateToken, async (req: AuthRequest, res: Response)
     }
 
     // Validate role
-    const validRoles = ['ADMIN', 'PARTICIPANT', 'BROTHER', 'CONTRIBUTOR'];
+    const validRoles = ['ADMIN', 'ORGANIZER', 'ATTENDEE', 'SPONSOR'];
     if (!validRoles.includes(role)) {
       return res.status(400).json({ 
         error: 'Invalid role. Must be one of: ' + validRoles.join(', '),

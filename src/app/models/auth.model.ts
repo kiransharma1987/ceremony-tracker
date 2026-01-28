@@ -1,6 +1,6 @@
 // User and Authentication Models
 
-export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'PARTICIPANT' | 'BROTHER' | 'CONTRIBUTOR';
+export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'ORGANIZER' | 'ATTENDEE' | 'SPONSOR';
 
 export interface User {
   id: string;
@@ -9,7 +9,6 @@ export interface User {
   displayName?: string;
   role: UserRole;
   productId?: string;
-  brotherId?: string; // legacy
   isActive: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -73,9 +72,9 @@ export function getRoleDisplayName(role: UserRole): string {
   const displayNames: Record<UserRole, string> = {
     SUPER_ADMIN: 'Super Administrator',
     ADMIN: 'Event Administrator',
-    PARTICIPANT: 'Participant',
-    BROTHER: 'Brother',
-    CONTRIBUTOR: 'Contributor'
+    ORGANIZER: 'Event Organizer',
+    ATTENDEE: 'Attendee',
+    SPONSOR: 'Sponsor'
   };
   return displayNames[role];
 }
@@ -84,9 +83,9 @@ export function getRoleIcon(role: UserRole): string {
   const icons: Record<UserRole, string> = {
     SUPER_ADMIN: '👑',
     ADMIN: '🔧',
-    PARTICIPANT: '👤',
-    BROTHER: '👥',
-    CONTRIBUTOR: '🤝'
+    ORGANIZER: '📋',
+    ATTENDEE: '👤',
+    SPONSOR: '💰'
   };
   return icons[role];
 }
@@ -95,9 +94,9 @@ export function getRoleColor(role: UserRole): string {
   const colors: Record<UserRole, string> = {
     SUPER_ADMIN: '#f44336', // red
     ADMIN: '#667eea',        // purple
-    PARTICIPANT: '#4caf50',   // green
-    BROTHER: '#2196f3',       // blue
-    CONTRIBUTOR: '#ff9800'    // orange
+    ORGANIZER: '#2196f3',    // blue
+    ATTENDEE: '#4caf50',     // green
+    SPONSOR: '#ff9800'       // orange
   };
   return colors[role];
 }

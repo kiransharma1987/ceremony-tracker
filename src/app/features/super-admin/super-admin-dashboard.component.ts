@@ -17,7 +17,7 @@ import { Product } from '../../models';
 
       <div class="dashboard-content">
         <div class="card">
-          <h2>Welcome {{ currentUser()?.name || 'Admin' }}</h2>
+          <h2>Welcome {{ currentUser().name || 'Admin' }}</h2>
           <p>Total Products: {{ products().length }}</p>
           <p>Total Users: {{ totalUsers() }}</p>
         </div>

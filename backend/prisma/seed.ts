@@ -73,60 +73,59 @@ async function main() {
     console.log(`✓ Admin exists: ${admin.email}`);
   }
 
-  // 4. Create Participant Users
-  const participants = [
-    { email: 'hnk@ceremony.local', name: 'HNK', brotherId: 'HNK' },
-    { email: 'hnp@ceremony.local', name: 'HNP', brotherId: 'HNP' },
-    { email: 'hns@ceremony.local', name: 'HNS', brotherId: 'HNS' },
-    { email: 'hnm@ceremony.local', name: 'HNM', brotherId: 'HNM' }
+  // 4. Create Attendee Users
+  const attendees = [
+    { email: 'attendee1@event.local', name: 'Attendee 1' },
+    { email: 'attendee2@event.local', name: 'Attendee 2' },
+    { email: 'attendee3@event.local', name: 'Attendee 3' },
+    { email: 'attendee4@event.local', name: 'Attendee 4' }
   ];
 
-  for (const participantData of participants) {
-    let participant = await prisma.user.findUnique({
-      where: { email: participantData.email }
+  for (const attendeeData of attendees) {
+    let attendee = await prisma.user.findUnique({
+      where: { email: attendeeData.email }
     });
 
-    if (!participant) {
-      const hashedPassword = await bcrypt.hash(`${participantData.brotherId}123`, 10);
+    if (!attendee) {
+      const hashedPassword = await bcrypt.hash('attendee123', 10);
       await prisma.user.create({
         data: {
-          email: participantData.email,
+          email: attendeeData.email,
           password: hashedPassword,
-          name: participantData.name,
-          displayName: participantData.name,
-          role: 'PARTICIPANT',
+          name: attendeeData.name,
+          displayName: attendeeData.name,
+          role: 'ATTENDEE',
           isActive: true,
-          productId: product.id,
-          brotherId: participantData.brotherId
+          productId: product.id
         }
       });
-      console.log(`✓ Created participant: ${participantData.email}`);
+      console.log(`✓ Created attendee: ${attendeeData.email}`);
     } else {
-      console.log(`✓ Participant exists: ${participantData.email}`);
+      console.log(`✓ Attendee exists: ${attendeeData.email}`);
     }
   }
 
-  // 5. Create Contributor User
-  let contributor = await prisma.user.findUnique({
-    where: { email: 'hnu@ceremony.local' }
+  // 5. Create Sponsor User
+  let sponsor = await prisma.user.findUnique({
+    where: { email: 'sponsor@event.local' }
   });
 
-  if (!contributor) {
-    const hashedPassword = await bcrypt.hash('hnu123', 10);
+  if (!sponsor) {
+    const hashedPassword = await bcrypt.hash('sponsor123', 10);
     await prisma.user.create({
       data: {
-        email: 'hnu@ceremony.local',
+        email: 'sponsor@event.local',
         password: hashedPassword,
-        name: 'HNU (Sister)',
-        displayName: 'HNU',
-        role: 'CONTRIBUTOR',
+        name: 'Event Sponsor',
+        displayName: 'Sponsor',
+        role: 'SPONSOR',
         isActive: true,
         productId: product.id
       }
     });
-    console.log(`✓ Created contributor: hnu@ceremony.local`);
+    console.log(`✓ Created sponsor: sponsor@event.local`);
   } else {
-    console.log(`✓ Contributor exists: hnu@ceremony.local`);
+    console.log(`✓ Sponsor exists: sponsor@event.local`);
   }
 
   // 6. Create sample budget categories if not exist
@@ -168,8 +167,8 @@ async function main() {
   console.log('\n📝 Test Credentials:');
   console.log('Super Admin: super@ceremony.local / superadmin123');
   console.log('Admin: admin@ceremony.local / admin123');
-  console.log('Participants: hnk@ceremony.local / hnk123 (and similar for hnp, hns, hnm)');
-  console.log('Contributor: hnu@ceremony.local / hnu123');
+  console.log('Attendees: attendee1@event.local / attendee123 (and similar for attendee2, 3, 4)');
+  console.log('Sponsor: sponsor@event.local / sponsor123');
 }
 
 main()

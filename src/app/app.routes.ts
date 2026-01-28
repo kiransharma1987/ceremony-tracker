@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { SuperAdminGuard } from './guards/super-admin.guard';
 import { AdminGuard } from './guards/admin.guard';
-import { ParticipantGuard } from './guards/participant.guard';
+import { AttendeeGuard } from './guards/attendee.guard';
 import { AuthenticatedGuard } from './guards/authenticated.guard';
 import { NoAuthGuard } from './guards/no-auth.guard';
 
@@ -69,17 +69,17 @@ export const routes: Routes = [
     ]
   },
 
-  // Participant routes
+  // Attendee routes
   {
-    path: 'brother',
-    canActivate: [ParticipantGuard],
-    loadComponent: () => import('./features/brother/brother-view.component').then(m => m.BrotherViewComponent)
+    path: 'attendee',
+    canActivate: [AttendeeGuard],
+    loadComponent: () => import('./features/attendee/attendee-view.component').then(m => m.AttendeeViewComponent)
   },
 
-  // Contributor routes
+  // Sponsor routes
   {
-    path: 'contributor',
-    loadComponent: () => import('./features/contributor/contributor-view.component').then(m => m.ContributorViewComponent)
+    path: 'sponsor',
+    loadComponent: () => import('./features/sponsor/sponsor-view.component').then(m => m.SponsorViewComponent)
   },
 
   {

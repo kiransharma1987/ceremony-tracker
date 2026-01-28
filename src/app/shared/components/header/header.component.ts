@@ -244,11 +244,13 @@ export class HeaderComponent {
     
     switch (user.role) {
       case 'ADMIN':
-        return '👑 Admin (KHK)';
-      case 'BROTHER':
-        return `👤 ${user.brotherId}`;
-      case 'CONTRIBUTOR':
-        return `🤝 ${user.name}`;
+        return '� Administrator';
+      case 'ORGANIZER':
+        return `📋 ${user.name}`;
+      case 'ATTENDEE':
+        return `👤 ${user.name}`;
+      case 'SPONSOR':
+        return '💰 Sponsor';
       default:
         return '';
     }

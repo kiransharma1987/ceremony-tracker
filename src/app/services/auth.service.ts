@@ -20,13 +20,17 @@ export class AuthService {
     const role = this.currentUser()?.role;
     return role === 'ADMIN';
   });
-  readonly isParticipant = computed(() => {
+  readonly isOrganizer = computed(() => {
     const role = this.currentUser()?.role;
-    return role === 'PARTICIPANT' || role === 'BROTHER';
+    return role === 'ORGANIZER';
   });
-  readonly isContributor = computed(() => {
+  readonly isAttendee = computed(() => {
     const role = this.currentUser()?.role;
-    return role === 'CONTRIBUTOR';
+    return role === 'ATTENDEE';
+  });
+  readonly isSponsor = computed(() => {
+    const role = this.currentUser()?.role;
+    return role === 'SPONSOR';
   });
   readonly userRole = computed(() => this.currentUser()?.role);
   readonly productId = computed(() => this.currentUser()?.productId);
@@ -193,11 +197,5 @@ export class AuthService {
       console.error('Delete user error:', error);
       throw error;
     }
-  }
-
-  // Legacy method for compatibility
-  getCurrentBrotherId(): string | null {
-    const user = this.currentUser();
-    return user?.brotherId || null;
   }
 }
