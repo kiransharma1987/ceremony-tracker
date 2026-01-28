@@ -37,6 +37,10 @@ router.get('/summary', authenticateToken, async (req: AuthRequest, res: Response
     const contributions = await prisma.contribution.findMany();
     const totalContributions = contributions.reduce((sum, c) => sum + Number(c.amount), 0);
 
+    // Get all deposits
+    const deposits = await prisma.deposit.findMany();
+    const totalDeposits = deposits.reduce((sum, d) => sum + Number(d.amount), 0);
+
     // Get settings
     const settings = await prisma.settings.findUnique({
       where: { id: 'app_settings' }
@@ -55,10 +59,22 @@ router.get('/summary', authenticateToken, async (req: AuthRequest, res: Response
       brotherPayments.set(exp.paidBy, current + Number(exp.amount));
     });
 
-    // Calculate settlements
+    // Calculate deposits by brother
+    const brotherDeposits = new Map<string, number>();
+    BROTHERS.forEach(b => brotherDeposits.set(b.id, 0));
+    
+    deposits.forEach(dep => {
+      const current = brotherDeposits.get(dep.depositedBy) || 0;
+      brotherDeposits.set(dep.depositedBy, current + Number(dep.amount));
+    });
+
+    // Calculate settlements (with deposits reducing the share)
     const brotherSettlements: BrotherSettlement[] = BROTHERS.map(brother => {
       const paid = brotherPayments.get(brother.id) || 0;
-      const balance = sharePerBrother - paid; // Positive = needs to pay, Negative = should receive
+      const deposited = brotherDeposits.get(brother.id) || 0;
+      // Share is reduced by deposits already paid
+      const adjustedShare = sharePerBrother - deposited;
+      const balance = adjustedShare - paid; // Positive = needs to pay, Negative = should receive
       
       return {
         id: brother.id,
@@ -108,6 +124,7 @@ router.get('/summary', authenticateToken, async (req: AuthRequest, res: Response
     res.json({
       totalExpenses,
       totalContributions,
+      totalDeposits,
       netExpense,
       sharePerBrother,
       brotherSettlements,
@@ -145,20 +162,33 @@ router.get('/brother/:brotherId', authenticateToken, async (req: AuthRequest, re
     const contributions = await prisma.contribution.findMany();
     const totalContributions = contributions.reduce((sum, c) => sum + Number(c.amount), 0);
 
+    // Get deposits for this brother
+    const brotherDeposits = await prisma.deposit.findMany({
+      where: { depositedBy: brotherId }
+    });
+    const totalDeposited = brotherDeposits.reduce((sum, d) => sum + Number(d.amount), 0);
+
     const netExpense = totalExpenses - totalContributions;
     const sharePerBrother = netExpense / 4;
+    const adjustedShare = sharePerBrother - totalDeposited;
     const totalPaid = paidExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
-    const balance = sharePerBrother - totalPaid;
+    const balance = adjustedShare - totalPaid;
 
     res.json({
       brother,
       totalPaid,
+      totalDeposited,
       share: sharePerBrother,
+      adjustedShare,
       balance,
       status: balance > 0.01 ? 'owes' : balance < -0.01 ? 'owed' : 'settled',
       paidExpenses: paidExpenses.map(e => ({
         ...e,
         amount: Number(e.amount)
+      })),
+      deposits: brotherDeposits.map(d => ({
+        ...d,
+        amount: Number(d.amount)
       }))
     });
   } catch (error) {

@@ -13,6 +13,7 @@ import {
 } from '../models';
 import { ExpenseService } from './expense.service';
 import { ContributionService } from './contribution.service';
+import { DepositService } from './deposit.service';
 
 @Injectable({
   providedIn: 'root'
@@ -31,6 +32,7 @@ export class SettlementService {
   readonly financialSummary = computed((): FinancialSummary => {
     const totalExpenses = this.expenseService.totalExpenses();
     const totalContributions = this.contributionService.totalContributions();
+    const totalDeposits = this.depositService.totalDeposits();
     
     // Net expense to be shared by brothers
     const rawNetExpense = totalExpenses - totalContributions;
@@ -42,10 +44,14 @@ export class SettlementService {
     
     // Calculate each brother's settlement
     const expensesByBrother = this.expenseService.expensesByBrother();
+    const depositsByBrother = this.depositService.depositsByBrother();
     
     const brotherSettlements: BrotherSettlement[] = BROTHERS.map(brother => {
       const paid = expensesByBrother.get(brother.id) || 0;
-      const balance = sharePerBrother - paid;
+      const deposited = depositsByBrother[brother.id] || 0;
+      // Share is reduced by deposits already paid
+      const adjustedShare = sharePerBrother - deposited;
+      const balance = adjustedShare - paid;
       
       return {
         brotherId: brother.id,
@@ -78,7 +84,8 @@ export class SettlementService {
 
   constructor(
     private expenseService: ExpenseService,
-    private contributionService: ContributionService
+    private contributionService: ContributionService,
+    private depositService: DepositService
   ) {
     this.loadFromStorage();
   }
