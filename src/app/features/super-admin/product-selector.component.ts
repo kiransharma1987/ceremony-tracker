@@ -1,13 +1,12 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { Product } from '../../models';
 
 @Component({
   selector: 'app-product-selector',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   template: `
     <div class="product-selector">
       <div class="header">
@@ -21,7 +20,7 @@ import { Product } from '../../models';
         </div>
 
         <div *ngIf="!isLoading() && products().length === 0" class="empty-state">
-          <p>No products created yet. <RouterLink to="/super-admin/products">Create one</RouterLink></p>
+          <p>No products created yet. <a href="/super-admin/products" class="link">Create one</a></p>
         </div>
 
         <div *ngIf="!isLoading() && products().length > 0" class="products-grid">
@@ -45,7 +44,7 @@ import { Product } from '../../models';
         </div>
 
         <div class="actions">
-          <RouterLink to="/super-admin" class="btn btn-secondary">← Back</RouterLink>
+          <a href="/super-admin" class="btn btn-secondary">← Back</a>
         </div>
       </div>
     </div>
@@ -90,6 +89,10 @@ import { Product } from '../../models';
       color: #667eea;
       text-decoration: none;
       font-weight: 600;
+    }
+
+    .empty-state a:hover {
+      text-decoration: underline;
     }
 
     .products-grid {

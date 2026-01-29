@@ -7,7 +7,7 @@ import { SummaryCardComponent } from '../../shared/components/summary-card/summa
 @Component({
   selector: 'app-attendee-view',
   standalone: true,
-  imports: [CommonModule, SummaryCardComponent],
+  imports: [CommonModule],
   template: `
     <div class="attendee-view">
       <div class="header">
