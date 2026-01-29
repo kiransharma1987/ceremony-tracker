@@ -217,15 +217,10 @@ router.post('/users', authenticateToken, async (req: AuthRequest, res: Response)
 // ===== GET ALL USERS (Super Admin Only) =====
 router.get('/users', async (req: AuthRequest, res: Response) => {
   try {
-    const allUsers = await prisma.user.findMany();
-    // Manually map to safe fields instead of using Prisma select
-    const users = allUsers.map(u => ({
-      id: u.id,
-      email: u.email,
-      name: u.name,
-      role: u.role,
-      isActive: u.isActive
-    }));
+    // Use raw SQL instead of Prisma ORM to avoid serialization issues on Render
+    const users = await prisma.$queryRaw`
+      SELECT id, email, name, role, is_active as isActive FROM users
+    `;
     return res.json({ users });
   } catch (error) {
     console.error('GET /users error:', error);
