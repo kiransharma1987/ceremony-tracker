@@ -15,8 +15,8 @@ import { AuthService } from '../../../services';
           <span class="subtitle">Manage your event finances</span>
         </div>
         
-        <nav class="nav-section" *ngIf="authService.isAuthenticated()">
-          <ng-container *ngIf="authService.isAdmin()">
+        <nav class="nav-section" *ngIf="(authService.isAdmin() || authService.isSuperAdmin())">
+          <ng-container *ngIf="authService.isAdmin() || authService.isSuperAdmin()">
             <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">Dashboard</a>
             <a routerLink="/admin/expenses" routerLinkActive="active" class="nav-link">Expenses</a>
             <a routerLink="/admin/contributions" routerLinkActive="active" class="nav-link">Contributions</a>
@@ -51,10 +51,10 @@ import { AuthService } from '../../../services';
       max-width: 1400px;
       margin: 0 auto;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
+      flex-wrap: nowrap;
+      gap: 2rem;
     }
     
     .logo-section {
@@ -79,18 +79,20 @@ import { AuthService } from '../../../services';
     
     .nav-section {
       display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
+      gap: 0;
+      flex-wrap: nowrap;
+      align-items: center;
     }
     
     .nav-link {
       color: rgba(255,255,255,0.85);
       text-decoration: none;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      font-size: 0.9rem;
+      padding: 0.5rem 0.8rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
       transition: all 0.2s ease;
       border-bottom: 3px solid transparent;
+      white-space: nowrap;
     }
     
     .nav-link:hover {
@@ -110,6 +112,7 @@ import { AuthService } from '../../../services';
       display: flex;
       align-items: center;
       gap: 1rem;
+      margin-left: auto;
     }
     
     .user-role {
@@ -237,7 +240,14 @@ import { AuthService } from '../../../services';
   `]
 })
 export class HeaderComponent {
-  constructor(public authService: AuthService) {}
+  constructor(public authService: AuthService) {
+    // Debug: Log auth state
+    setInterval(() => {
+      if (this.authService.isAuthenticated()) {
+        console.log('Auth State - isAdmin:', this.authService.isAdmin(), 'isSuperAdmin:', this.authService.isSuperAdmin(), 'userRole:', this.authService.userRole());
+      }
+    }, 5000);
+  }
 
   getRoleDisplay(): string {
     const user = this.authService.user();
