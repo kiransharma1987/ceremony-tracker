@@ -417,5 +417,43 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res: Response) => 
   }
 });
 
-export default router;
+// ===== DELETE USER (Super Admin Only) =====
+router.delete('/users/:userId', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    if (req.user?.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ 
+        error: 'Only Super Admin can delete users',
+        code: 'UNAUTHORIZED'
+      });
+    }
+
+    const { userId } = req.params;
+
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      return res.status(404).json({ 
+        error: 'User not found',
+        code: 'NOT_FOUND'
+      });
+    }
+
+    // Delete the user
+    await prisma.user.delete({
+      where: { id: userId }
+    });
+
+    return res.json({ message: 'User deleted successfully' });
+
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ 
+      error: 'Failed to delete user',
+      code: 'DELETE_ERROR'
+    });
+  }
+});
 

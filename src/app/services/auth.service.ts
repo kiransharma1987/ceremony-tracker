@@ -200,6 +200,22 @@ export class AuthService {
     }
   }
 
+  async resetUserPassword(userId: string, newPassword: string): Promise<boolean> {
+    try {
+      await firstValueFrom(
+        this.http.post(
+          `${environment.apiUrl}/auth/reset-password/${userId}`,
+          { newPassword },
+          { headers: this.getAuthHeaders() }
+        )
+      );
+      return true;
+    } catch (error) {
+      console.error('Reset password error:', error);
+      throw error;
+    }
+  }
+
   async getAllProducts(): Promise<Product[]> {
     try {
       const response = await firstValueFrom(

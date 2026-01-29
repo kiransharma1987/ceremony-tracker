@@ -12,6 +12,10 @@ interface Product {
   description: string;
 }
 
+interface EditingProduct extends ProductResponse {
+  editing?: boolean;
+}
+
 @Component({
   selector: 'app-product-management',
   standalone: true,
@@ -93,7 +97,60 @@ interface Product {
                 <p *ngIf="product.userCount"><strong>Users:</strong> {{ product.userCount }}</p>
                 <p *ngIf="product.expenseCount"><strong>Expenses:</strong> {{ product.expenseCount }}</p>
               </div>
+              <div class="product-actions">
+                <button (click)="editProduct(product)" class="btn btn-edit">✏️ Edit</button>
+                <button (click)="deleteProduct(product.id)" class="btn btn-delete">🗑️ Delete</button>
+              </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Edit Product Modal -->
+        <div *ngIf="editingProductData()" class="modal-overlay" (click)="cancelEdit()">
+          <div class="modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h2>Edit Product</h2>
+              <button (click)="cancelEdit()" class="btn-close">&times;</button>
+            </div>
+            <form (ngSubmit)="updateProduct()" class="form">
+              <div class="form-group">
+                <label>Product Name:</label>
+                <input type="text" [(ngModel)]="editingProductData()!.name" name="name" required>
+              </div>
+
+              <div class="form-group">
+                <label>Product Type:</label>
+                <select [(ngModel)]="editingProductData()!.type" name="type" required>
+                  <option value="CEREMONY">Ceremony</option>
+                  <option value="WEDDING">Wedding</option>
+                  <option value="TEAM_DINNER">Team Dinner</option>
+                  <option value="SHARED_APARTMENT">Shared Apartment</option>
+                  <option value="TRIP">Trip</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Overall Budget:</label>
+                <input type="number" [(ngModel)]="editingProductData()!.overallBudget" name="overallBudget" required>
+              </div>
+
+              <div class="form-group">
+                <label>Description:</label>
+                <textarea [(ngModel)]="editingProductData()!.description" name="description"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" [(ngModel)]="editingProductData()!.isClosed" name="isClosed">
+                  Mark as Closed
+                </label>
+              </div>
+
+              <div class="modal-actions">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <button type="button" (click)="cancelEdit()" class="btn btn-cancel">Cancel</button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -295,6 +352,120 @@ interface Product {
       border-radius: 8px;
       color: #999;
     }
+
+    .product-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #eee;
+    }
+
+    .btn-edit, .btn-delete {
+      flex: 1;
+      font-size: 12px;
+      padding: 8px 12px;
+    }
+
+    .btn-edit {
+      background-color: #667eea;
+      color: white;
+    }
+
+    .btn-edit:hover {
+      background-color: #5a67d8;
+    }
+
+    .btn-delete {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .btn-delete:hover {
+      background-color: #da190b;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-close:hover {
+      color: #333;
+    }
+
+    .modal .form {
+      padding: 20px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      padding: 20px;
+      border-top: 1px solid #eee;
+      background: #f9f9f9;
+    }
+
+    .btn-cancel {
+      background-color: #ddd;
+      color: #333;
+      flex: 1;
+    }
+
+    .btn-cancel:hover {
+      background-color: #ccc;
+    }
+
+    .modal .btn-primary {
+      width: auto;
+      flex: 1;
+    }
   `]
 })
 export class ProductManagementComponent implements OnInit {
@@ -316,6 +487,9 @@ export class ProductManagementComponent implements OnInit {
   
   private errorMsg = signal('');
   readonly errorMessage = this.errorMsg.asReadonly();
+
+  private editingProductSignal = signal<EditingProduct | null>(null);
+  readonly editingProductData = this.editingProductSignal.asReadonly();
 
   readonly isFormValid = computed(() => {
     const product = this.newProduct();
@@ -395,6 +569,94 @@ export class ProductManagementComponent implements OnInit {
     } catch (error) {
       console.error('Failed to load products:', error);
       this.productsData.set([]);
+    }
+  }
+
+  editProduct(product: ProductResponse): void {
+    this.editingProductSignal.set({
+      ...product,
+      editing: true
+    });
+  }
+
+  cancelEdit(): void {
+    this.editingProductSignal.set(null);
+    this.errorMsg.set('');
+  }
+
+  async updateProduct(): Promise<void> {
+    const product = this.editingProductData();
+    if (!product) return;
+
+    if (!product.name || !product.name.trim()) {
+      this.errorMsg.set('Product name is required');
+      return;
+    }
+
+    if (!product.type || !product.type.trim()) {
+      this.errorMsg.set('Product type is required');
+      return;
+    }
+
+    this.isLoadingSignal.set(true);
+    this.errorMsg.set('');
+    this.successMsg.set('');
+
+    try {
+      await this.productService.updateProduct(product.id, {
+        name: product.name,
+        type: product.type,
+        overallBudget: product.overallBudget,
+        description: product.description || undefined
+      });
+
+      this.successMsg.set(`Product "${product.name}" updated successfully!`);
+      this.editingProductSignal.set(null);
+
+      // Reload products
+      try {
+        await this.loadProducts();
+      } catch (loadError) {
+        console.error('Failed to reload products:', loadError);
+      }
+
+      setTimeout(() => this.successMsg.set(''), 5000);
+    } catch (error: any) {
+      const errorMessage = error?.error?.error || 'Failed to update product. Please try again.';
+      this.errorMsg.set(errorMessage);
+      console.error('Product update error:', error);
+    } finally {
+      this.isLoadingSignal.set(false);
+    }
+  }
+
+  async deleteProduct(productId: string): Promise<void> {
+    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+      return;
+    }
+
+    this.isLoadingSignal.set(true);
+    this.errorMsg.set('');
+    this.successMsg.set('');
+
+    try {
+      await this.productService.deleteProduct(productId);
+      this.successMsg.set('Product deleted successfully!');
+
+      // Reload products
+      try {
+        await this.loadProducts();
+      } catch (loadError) {
+        console.error('Failed to reload products:', loadError);
+      }
+
+      setTimeout(() => this.successMsg.set(''), 5000);
+    } catch (error: any) {
+      const errorMessage = error?.error?.error || 'Failed to delete product. Please try again.';
+      this.errorMsg.set(errorMessage);
+      console.error('Product delete error:', error);
+    } finally {
+      this.isLoadingSignal.set(false);
     }
   }
 }

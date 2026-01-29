@@ -13,6 +13,17 @@ interface UserForm {
   productId: string;
 }
 
+interface EditingUser extends User {
+  editing?: boolean;
+}
+
+interface PasswordResetForm {
+  userId: string;
+  userName: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 @Component({
   selector: 'app-user-management',
   standalone: true,
@@ -99,6 +110,7 @@ interface UserForm {
                   <th>Role</th>
                   <th>Product</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -110,9 +122,103 @@ interface UserForm {
                   <td><span class="status" [ngClass]="user.isActive ? 'status-active' : 'status-inactive'">
                     {{ user.isActive ? 'Active' : 'Inactive' }}
                   </span></td>
+                  <td>
+                    <div class="user-actions">
+                      <button (click)="editUser(user)" class="btn-action btn-edit" title="Edit">✏️</button>
+                      <button (click)="resetPassword(user)" class="btn-action btn-reset" title="Reset Password">🔑</button>
+                      <button (click)="deleteUser(user.id)" class="btn-action btn-delete" title="Delete">🗑️</button>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- Edit User Modal -->
+        <div *ngIf="editingUserData()" class="modal-overlay" (click)="cancelEdit()">
+          <div class="modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h2>Edit User</h2>
+              <button (click)="cancelEdit()" class="btn-close">&times;</button>
+            </div>
+            <form (ngSubmit)="updateUser()" class="form">
+              <div class="form-group">
+                <label>Email:</label>
+                <input type="email" [value]="editingUserData()!.email" disabled>
+                <small>Email cannot be changed</small>
+              </div>
+
+              <div class="form-group">
+                <label>Name:</label>
+                <input type="text" [(ngModel)]="editingUserData()!.name" name="name" required>
+              </div>
+
+              <div class="form-group">
+                <label>Role:</label>
+                <select [(ngModel)]="editingUserData()!.role" name="role" required>
+                  <option value="ADMIN">Admin</option>
+                  <option value="ORGANIZER">Organizer</option>
+                  <option value="ATTENDEE">Attendee</option>
+                  <option value="SPONSOR">Sponsor</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Product (Optional):</label>
+                <select [(ngModel)]="editingUserData()!.productId" name="productId">
+                  <option value="">-- No Product --</option>
+                  <option *ngFor="let product of products()" [value]="product.id">
+                    {{ product.name }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" [(ngModel)]="editingUserData()!.isActive" name="isActive">
+                  Active
+                </label>
+              </div>
+
+              <div class="modal-actions">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <button type="button" (click)="cancelEdit()" class="btn btn-cancel">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Password Reset Modal -->
+        <div *ngIf="passwordResetForm()" class="modal-overlay" (click)="cancelPasswordReset()">
+          <div class="modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h2>Reset Password</h2>
+              <button (click)="cancelPasswordReset()" class="btn-close">&times;</button>
+            </div>
+            <form (ngSubmit)="performPasswordReset()" class="form">
+              <div class="form-group">
+                <label>User:</label>
+                <input type="text" [value]="passwordResetForm()!.userName" disabled>
+              </div>
+
+              <div class="form-group">
+                <label>New Password:</label>
+                <input type="password" [(ngModel)]="passwordResetForm()!.newPassword" name="newPassword" 
+                       placeholder="Enter new password" required minlength="6">
+              </div>
+
+              <div class="form-group">
+                <label>Confirm Password:</label>
+                <input type="password" [(ngModel)]="passwordResetForm()!.confirmPassword" name="confirmPassword" 
+                       placeholder="Confirm password" required minlength="6">
+              </div>
+
+              <div class="modal-actions">
+                <button type="submit" class="btn btn-primary">Reset Password</button>
+                <button type="button" (click)="cancelPasswordReset()" class="btn btn-cancel">Cancel</button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -332,6 +438,135 @@ interface UserForm {
       border-radius: 8px;
       color: #999;
     }
+
+    .user-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-action {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .btn-edit {
+      background-color: #667eea;
+      color: white;
+    }
+
+    .btn-edit:hover {
+      background-color: #5a67d8;
+    }
+
+    .btn-reset {
+      background-color: #ff9800;
+      color: white;
+    }
+
+    .btn-reset:hover {
+      background-color: #f57c00;
+    }
+
+    .btn-delete {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .btn-delete:hover {
+      background-color: #da190b;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-close:hover {
+      color: #333;
+    }
+
+    .modal .form {
+      padding: 20px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      padding: 20px;
+      border-top: 1px solid #eee;
+      background: #f9f9f9;
+    }
+
+    .btn-cancel {
+      background-color: #ddd;
+      color: #333;
+      flex: 1;
+    }
+
+    .btn-cancel:hover {
+      background-color: #ccc;
+    }
+
+    .modal .btn-primary {
+      width: auto;
+      flex: 1;
+    }
+
+    small {
+      color: #999;
+      display: block;
+      margin-top: 4px;
+    }
   `]
 })
 export class UserManagementComponent implements OnInit {
@@ -357,6 +592,12 @@ export class UserManagementComponent implements OnInit {
 
   private errorMsg = signal('');
   readonly errorMessage = this.errorMsg.asReadonly();
+
+  private editingUserSignal = signal<EditingUser | null>(null);
+  readonly editingUserData = this.editingUserSignal.asReadonly();
+
+  private passwordResetFormSignal = signal<PasswordResetForm | null>(null);
+  readonly passwordResetForm = this.passwordResetFormSignal.asReadonly();
 
   readonly isFormValid = computed(() => {
     const user = this.newUser();
@@ -490,6 +731,144 @@ export class UserManagementComponent implements OnInit {
     } catch (error) {
       console.error('Failed to load products:', error);
       this.productsData.set([]);
+    }
+  }
+
+  editUser(user: User): void {
+    this.editingUserSignal.set({
+      ...user,
+      editing: true
+    });
+  }
+
+  cancelEdit(): void {
+    this.editingUserSignal.set(null);
+    this.errorMsg.set('');
+  }
+
+  async updateUser(): Promise<void> {
+    const user = this.editingUserData();
+    if (!user) return;
+
+    if (!user.name || !user.name.trim()) {
+      this.errorMsg.set('Name is required');
+      return;
+    }
+
+    if (!user.role || !user.role.trim()) {
+      this.errorMsg.set('Role is required');
+      return;
+    }
+
+    this.isLoadingSignal.set(true);
+    this.errorMsg.set('');
+    this.successMsg.set('');
+
+    try {
+      await this.authServiceAPI.updateUser(user.id, {
+        name: user.name,
+        role: user.role as UserRole,
+        productId: user.productId || undefined,
+        isActive: user.isActive
+      } as any);
+
+      this.successMsg.set(`User "${user.name}" updated successfully!`);
+      this.editingUserSignal.set(null);
+
+      // Reload users
+      try {
+        await this.loadUsers();
+      } catch (loadError) {
+        console.error('Failed to reload users:', loadError);
+      }
+
+      setTimeout(() => this.successMsg.set(''), 5000);
+    } catch (error: any) {
+      const errorMessage = error?.error?.error || 'Failed to update user. Please try again.';
+      this.errorMsg.set(errorMessage);
+      console.error('User update error:', error);
+    } finally {
+      this.isLoadingSignal.set(false);
+    }
+  }
+
+  resetPassword(user: User): void {
+    this.passwordResetFormSignal.set({
+      userId: user.id,
+      userName: user.name || user.email,
+      newPassword: '',
+      confirmPassword: ''
+    });
+  }
+
+  cancelPasswordReset(): void {
+    this.passwordResetFormSignal.set(null);
+    this.errorMsg.set('');
+  }
+
+  async performPasswordReset(): Promise<void> {
+    const form = this.passwordResetForm();
+    if (!form) return;
+
+    if (!form.newPassword || form.newPassword.length < 6) {
+      this.errorMsg.set('Password must be at least 6 characters');
+      return;
+    }
+
+    if (form.newPassword !== form.confirmPassword) {
+      this.errorMsg.set('Passwords do not match');
+      return;
+    }
+
+    this.isLoadingSignal.set(true);
+    this.errorMsg.set('');
+    this.successMsg.set('');
+
+    try {
+      await this.authServiceAPI.resetUserPassword(form.userId, form.newPassword);
+      this.successMsg.set(`Password for "${form.userName}" has been reset successfully!`);
+      this.passwordResetFormSignal.set(null);
+
+      setTimeout(() => this.successMsg.set(''), 5000);
+    } catch (error: any) {
+      const errorMessage = error?.error?.error || 'Failed to reset password. Please try again.';
+      this.errorMsg.set(errorMessage);
+      console.error('Password reset error:', error);
+    } finally {
+      this.isLoadingSignal.set(false);
+    }
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    const user = this.usersData().find(u => u.id === userId);
+    const userName = user?.name || user?.email || 'User';
+    
+    if (!confirm(`Are you sure you want to delete "${userName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    this.isLoadingSignal.set(true);
+    this.errorMsg.set('');
+    this.successMsg.set('');
+
+    try {
+      await this.authServiceAPI.deleteUser(userId);
+      this.successMsg.set(`User "${userName}" deleted successfully!`);
+
+      // Reload users
+      try {
+        await this.loadUsers();
+      } catch (loadError) {
+        console.error('Failed to reload users:', loadError);
+      }
+
+      setTimeout(() => this.successMsg.set(''), 5000);
+    } catch (error: any) {
+      const errorMessage = error?.error?.error || 'Failed to delete user. Please try again.';
+      this.errorMsg.set(errorMessage);
+      console.error('User delete error:', error);
+    } finally {
+      this.isLoadingSignal.set(false);
     }
   }
 }
