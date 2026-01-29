@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, WritableSignal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ProductService, ProductResponse } from '../../services/product.service';
 
@@ -99,6 +99,7 @@ interface EditingProduct extends ProductResponse {
               </div>
               <div class="product-actions">
                 <button (click)="editProduct(product)" class="btn btn-edit">✏️ Edit</button>
+                <button (click)="goToConfig(product.id)" class="btn btn-config">⚙️ Config</button>
                 <button (click)="deleteProduct(product.id)" class="btn btn-delete">🗑️ Delete</button>
               </div>
             </div>
@@ -376,6 +377,15 @@ interface EditingProduct extends ProductResponse {
       background-color: #5a67d8;
     }
 
+    .btn-config {
+      background-color: #ff9800;
+      color: white;
+    }
+
+    .btn-config:hover {
+      background-color: #f57c00;
+    }
+
     .btn-delete {
       background-color: #f44336;
       color: white;
@@ -499,7 +509,8 @@ export class ProductManagementComponent implements OnInit {
 
   constructor(
     public authService: AuthService,
-    private productService: ProductService
+    private productService: ProductService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -658,6 +669,10 @@ export class ProductManagementComponent implements OnInit {
     } finally {
       this.isLoadingSignal.set(false);
     }
+  }
+
+  goToConfig(productId: string): void {
+    this.router.navigate(['/super-admin/products', productId, 'config']);
   }
 }
 

@@ -20,6 +20,16 @@ model Product {
   overallBudget Decimal  @default(0) @map("overall_budget") @db.Decimal(10, 2)
   isClosed      Boolean  @default(false) @map("is_closed")
   closedAt      DateTime? @map("closed_at")
+  
+  // Configuration - which tabs/features are enabled
+  enableDashboard     Boolean @default(true) @map("enable_dashboard")
+  enableExpenses      Boolean @default(true) @map("enable_expenses")
+  enableContributions Boolean @default(true) @map("enable_contributions")
+  enableDeposits      Boolean @default(true) @map("enable_deposits")
+  enableBudget        Boolean @default(true) @map("enable_budget")
+  enableReports       Boolean @default(true) @map("enable_reports")
+  enableSettlement    Boolean @default(true) @map("enable_settlement")
+  
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 

@@ -31,6 +31,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/super-admin/product-management.component').then(m => m.ProductManagementComponent)
       },
       {
+        path: 'products/:productId/config',
+        loadComponent: () => import('./features/super-admin/product-config.component').then(m => m.ProductConfigComponent)
+      },
+      {
         path: 'users',
         loadComponent: () => import('./features/super-admin/user-management.component').then(m => m.UserManagementComponent)
       },
