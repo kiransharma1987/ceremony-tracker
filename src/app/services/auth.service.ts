@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { User, LoginResponse, CreateUserRequest } from '../models';
+import { User, LoginResponse, CreateUserRequest, Product } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -195,6 +195,21 @@ export class AuthService {
       return true;
     } catch (error) {
       console.error('Delete user error:', error);
+      throw error;
+    }
+  }
+
+  async getAllProducts(): Promise<Product[]> {
+    try {
+      const response = await firstValueFrom(
+        this.http.get<{ products: Product[] }>(
+          `${environment.apiUrl}/products`,
+          { headers: this.getAuthHeaders() }
+        )
+      );
+      return response.products;
+    } catch (error) {
+      console.error('Get products error:', error);
       throw error;
     }
   }

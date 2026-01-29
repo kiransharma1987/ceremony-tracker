@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { User, CreateUserRequest, UserRole } from '../../models';
+import { User, CreateUserRequest, UserRole, Product } from '../../models';
 
 interface UserForm {
   email: string;
@@ -56,7 +56,12 @@ interface UserForm {
 
             <div class="form-group">
               <label>Product (Optional):</label>
-              <input type="text" [(ngModel)]="newUser().productId" name="productId" placeholder="Select or leave empty for Super Admin users">
+              <select [(ngModel)]="newUser().productId" name="productId">
+                <option value="">-- No Product (Super Admin) --</option>
+                <option *ngFor="let product of products()" [value]="product.id">
+                  {{ product.name }}
+                </option>
+              </select>
             </div>
 
             <button type="submit" class="btn btn-primary">
@@ -341,6 +346,9 @@ export class UserManagementComponent implements OnInit {
   private usersData = signal<User[]>([]);
   readonly users = this.usersData.asReadonly();
 
+  private productsData = signal<Product[]>([]);
+  readonly products = this.productsData.asReadonly();
+
   private isLoadingSignal = signal(false);
   readonly isLoading = this.isLoadingSignal.asReadonly();
 
@@ -365,6 +373,7 @@ export class UserManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUsers();
+    this.loadProducts();
   }
 
   getRoleDisplay(role: string): string {
@@ -471,6 +480,16 @@ export class UserManagementComponent implements OnInit {
     } catch (error) {
       console.error('Failed to load users:', error);
       this.usersData.set([]);
+    }
+  }
+
+  private async loadProducts(): Promise<void> {
+    try {
+      const products = await this.authServiceAPI.getAllProducts();
+      this.productsData.set(products);
+    } catch (error) {
+      console.error('Failed to load products:', error);
+      this.productsData.set([]);
     }
   }
 }
