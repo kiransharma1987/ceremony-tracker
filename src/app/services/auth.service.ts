@@ -62,6 +62,7 @@ export class AuthService {
   private clearStorage(): void {
     localStorage.removeItem('ceremony_tracker_token');
     localStorage.removeItem('ceremony_tracker_user');
+    localStorage.removeItem('selectedProductId');
     this.token.set(null);
     this.currentUser.set(null);
   }

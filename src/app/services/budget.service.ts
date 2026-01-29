@@ -91,16 +91,24 @@ export class BudgetService {
     }
 
     try {
+      // Get productId from auth service or localStorage (for SUPER_ADMIN)
+      let productId = this.authService.productId();
+      if (!productId) {
+        productId = localStorage.getItem('selectedProductId') || undefined;
+      }
+      
+      const urlParams = productId ? `?productId=${productId}` : '';
+      
       // Load category budgets
       const budgets = await firstValueFrom(
-        this.http.get<any[]>(`${environment.apiUrl}/budgets`, {
+        this.http.get<any[]>(`${environment.apiUrl}/budgets${urlParams}`, {
           headers: this.authService.getAuthHeaders()
         })
       );
       
       // Load settings (overall budget)
       const settings = await firstValueFrom(
-        this.http.get<any>(`${environment.apiUrl}/budgets/settings`, {
+        this.http.get<any>(`${environment.apiUrl}/budgets/settings${urlParams}`, {
           headers: this.authService.getAuthHeaders()
         })
       );

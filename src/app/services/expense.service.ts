@@ -87,8 +87,19 @@ export class ExpenseService {
 
     try {
       console.log('Fetching expenses from API...');
+      
+      // Get productId from auth service or localStorage (for SUPER_ADMIN)
+      let productId = this.authService.productId();
+      if (!productId) {
+        productId = localStorage.getItem('selectedProductId') || undefined;
+      }
+      
+      const url = productId 
+        ? `${environment.apiUrl}/expenses?productId=${productId}`
+        : `${environment.apiUrl}/expenses`;
+      
       const data = await firstValueFrom(
-        this.http.get<any[]>(`${environment.apiUrl}/expenses`, {
+        this.http.get<any[]>(url, {
           headers: this.authService.getAuthHeaders()
         })
       );

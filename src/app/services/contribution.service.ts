@@ -60,8 +60,18 @@ export class ContributionService {
     }
 
     try {
+      // Get productId from auth service or localStorage (for SUPER_ADMIN)
+      let productId = this.authService.productId();
+      if (!productId) {
+        productId = localStorage.getItem('selectedProductId') || undefined;
+      }
+      
+      const url = productId 
+        ? `${environment.apiUrl}/contributions?productId=${productId}`
+        : `${environment.apiUrl}/contributions`;
+      
       const data = await firstValueFrom(
-        this.http.get<any[]>(`${environment.apiUrl}/contributions`, {
+        this.http.get<any[]>(url, {
           headers: this.authService.getAuthHeaders()
         })
       );

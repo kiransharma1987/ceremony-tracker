@@ -66,7 +66,18 @@ export class DepositService {
     }
 
     console.log('Deposits: Fetching from API...');
-    this.http.get<Deposit[]>(this.apiUrl, { headers: this.authService.getAuthHeaders() })
+    
+    // Get productId from auth service or localStorage (for SUPER_ADMIN)
+    let productId = this.authService.productId();
+    if (!productId) {
+      productId = localStorage.getItem('selectedProductId') || undefined;
+    }
+    
+    const url = productId 
+      ? `${this.apiUrl}?productId=${productId}`
+      : this.apiUrl;
+    
+    this.http.get<Deposit[]>(url, { headers: this.authService.getAuthHeaders() })
       .subscribe({
         next: (deposits) => {
           console.log('Deposits: API returned', deposits.length, 'deposits');

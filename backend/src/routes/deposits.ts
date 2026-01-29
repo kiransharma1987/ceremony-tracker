@@ -7,12 +7,14 @@ const router: Router = Router();
 // Get all deposits for a product
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user?.productId) {
+    const productId = req.query.productId as string || req.user?.productId;
+    
+    if (!productId) {
       return res.status(403).json({ error: 'Product context required' });
     }
 
     const deposits = await prisma.deposit.findMany({
-      where: { productId: req.user.productId },
+      where: { productId },
       orderBy: { date: 'desc' }
     });
 
@@ -29,12 +31,14 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 // Get deposits summary by brother
 router.get('/summary', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user?.productId) {
+    const productId = req.query.productId as string || req.user?.productId;
+    
+    if (!productId) {
       return res.status(403).json({ error: 'Product context required' });
     }
 
     const deposits = await prisma.deposit.findMany({
-      where: { productId: req.user.productId }
+      where: { productId }
     });
     
     const summary = {

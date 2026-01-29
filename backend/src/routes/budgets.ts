@@ -7,12 +7,14 @@ const router: Router = Router();
 // Get all budgets for a product
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user?.productId) {
+    const productId = req.query.productId as string || req.user?.productId;
+    
+    if (!productId) {
       return res.status(403).json({ error: 'Product context required' });
     }
 
     const budgets = await prisma.budget.findMany({
-      where: { productId: req.user.productId }
+      where: { productId }
     });
 
     res.json(budgets.map(b => ({
@@ -89,12 +91,14 @@ router.delete('/category/:category', authenticateToken, requireAdmin, async (req
 // Get product settings (overall budget, closed status)
 router.get('/settings', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user?.productId) {
+    const productId = req.query.productId as string || req.user?.productId;
+    
+    if (!productId) {
       return res.status(403).json({ error: 'Product context required' });
     }
 
     const product = await prisma.product.findUnique({
-      where: { id: req.user.productId }
+      where: { id: productId }
     });
 
     if (!product) {

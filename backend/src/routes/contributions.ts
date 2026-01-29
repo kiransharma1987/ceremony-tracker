@@ -7,12 +7,14 @@ const router: Router = Router();
 // Get all contributions for a product
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user?.productId) {
+    const productId = req.query.productId as string || req.user?.productId;
+    
+    if (!productId) {
       return res.status(403).json({ error: 'Product context required' });
     }
 
     const contributions = await prisma.contribution.findMany({
-      where: { productId: req.user.productId },
+      where: { productId },
       orderBy: { date: 'desc' }
     });
 

@@ -33,6 +33,10 @@ export const routes: Routes = [
       {
         path: 'users',
         loadComponent: () => import('./features/super-admin/user-management.component').then(m => m.UserManagementComponent)
+      },
+      {
+        path: 'select-product',
+        loadComponent: () => import('./features/super-admin/product-selector.component').then(m => m.ProductSelectorComponent)
       }
     ]
   },

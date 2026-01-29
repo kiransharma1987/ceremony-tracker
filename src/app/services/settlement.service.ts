@@ -97,8 +97,16 @@ export class SettlementService {
     }
 
     try {
+      // Get productId from auth service or localStorage (for SUPER_ADMIN)
+      let productId = this.authService.productId();
+      if (!productId) {
+        productId = localStorage.getItem('selectedProductId') || undefined;
+      }
+      
+      const urlParams = productId ? `?productId=${productId}` : '';
+      
       const settings = await firstValueFrom(
-        this.http.get<any>(`${environment.apiUrl}/budgets/settings`, {
+        this.http.get<any>(`${environment.apiUrl}/budgets/settings${urlParams}`, {
           headers: this.authService.getAuthHeaders()
         })
       );
