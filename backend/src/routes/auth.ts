@@ -457,3 +457,6 @@ router.delete('/users/:userId', authenticateToken, async (req: AuthRequest, res:
   }
 });
 
+export default router;
+
+
