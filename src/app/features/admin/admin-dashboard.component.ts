@@ -58,54 +58,7 @@ import { EXPENSE_CATEGORIES } from '../../models';
       </section>
 
       <!-- Brother Settlement Table -->
-      <section class="settlement-section">
-        <h2 class="section-title">👨‍👩‍👦‍👦 Brother Settlement</h2>
-        <div class="table-container">
-          <table class="settlement-table">
-            <thead>
-              <tr>
-                <th>Brother</th>
-                <th>Paid</th>
-                <th>Share</th>
-                <th>Balance</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let brother of summary().brotherSettlements">
-                <td class="brother-name">
-                  <span class="avatar">{{ brother.name.charAt(0) }}</span>
-                  {{ brother.name }}
-                </td>
-                <td>₹{{ brother.paid | number:'1.2-2':'en-IN' }}</td>
-                <td>₹{{ brother.share | number:'1.2-2':'en-IN' }}</td>
-                <td [class]="getBalanceClass(brother.balance)">
-                  {{ brother.balance >= 0 ? '+' : '' }}₹{{ brother.balance | number:'1.2-2':'en-IN' }}
-                </td>
-                <td>
-                  <span class="status-badge" [class]="getStatusClass(brother.balance)">
-                    {{ getStatusText(brother.balance) }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- Settlement Instructions -->
-      <section class="instructions-section" *ngIf="summary().settlementInstructions.length > 0">
-        <h2 class="section-title">💸 Settlement Instructions</h2>
-        <div class="instructions-list">
-          <div class="instruction-card" *ngFor="let instruction of summary().settlementInstructions">
-            <span class="from">{{ instruction.from }}</span>
-            <span class="arrow">→</span>
-            <span class="amount">₹{{ instruction.amount | number:'1.2-2':'en-IN' }}</span>
-            <span class="arrow">→</span>
-            <span class="to">{{ instruction.to }}</span>
-          </div>
-        </div>
-      </section>
+      <!-- Moved to /admin/settlement route -->
 
       <!-- Charts Section -->
       <section class="charts-section">

@@ -22,6 +22,7 @@ import { AuthService } from '../../../services';
             <a routerLink="/admin/contributions" routerLinkActive="active" class="nav-link">Contributions</a>
             <a routerLink="/admin/deposits" routerLinkActive="active" class="nav-link">Deposits</a>
             <a routerLink="/admin/budget" routerLinkActive="active" class="nav-link">Budget</a>
+            <a routerLink="/admin/settlement" routerLinkActive="active" class="nav-link">Settlement</a>
             <a routerLink="/admin/reports" routerLinkActive="active" class="nav-link">Reports</a>
           </ng-container>
         </nav>

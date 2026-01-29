@@ -71,6 +71,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/budget-management.component').then(m => m.BudgetManagementComponent)
       },
       {
+        path: 'settlement',
+        loadComponent: () => import('./features/admin/settlement.component').then(m => m.SettlementComponent)
+      },
+      {
         path: 'reports',
         loadComponent: () => import('./features/admin/reports.component').then(m => m.ReportsComponent)
       }
